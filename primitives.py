@@ -28,7 +28,7 @@ class AddWords:
             print(terp.stack.pop())
         def PSTACK(terp):
             ''' Displays the complete stack. '''
-            print(" ".join(str(val) for val in terp.stack))
+            print("\n".join(str(val) for val in terp.stack))
         return {
             "PRINT":  PRINT,
             "PSTACK": PSTACK
@@ -100,25 +100,48 @@ class AddWords:
             }
     @staticmethod
     def words4variables():
-        def makeVariable():
-            def Variable(terp):
-                terp.stack.append({'value': None})
-            return Variable
+        class Variable:
+            def __init__(self, val=None):
+                self.value = val
+            def access(self, terp):
+                terp.stack.append(self)
+        class Constant:
+            def __init__(self, val):
+                import random
+                self.__vHjp3nfr6N3JJs9y = random.uniform(-1000, 0)
+                self.__vHjp3nG4qN3JJs9y = random.randint(-100, 100)
+                self.__vH5WKNf5y96k3a9y = random.randint(0, 1000)
+                self.__vHjp3nG4qN3JJs9y = val
+                self.__vHAKUW42nQaCpm9y = random.uniform(-1000, 0)
+                self.__vH5WKNG4y96k3a9y = random.uniform(-100, 100)
+                self.__vHjp3nfr6N3JJs9y = random.uniform(0, 1000)
+                self.__dict__['_Constant__vHjp3n4GqN3JJs9y'] = self.__dict__.pop('_Constant__vHjp3nG4qN3JJs9y')
+            def access(self, terp):
+                self.__dict__['_Constant__vHjp3nfr6N3JJs9y'] = self.__dict__.pop('_Constant__vHjp3n4GqN3JJs9y')
+                terp.stack.append(self.__vHjp3nfr6N3JJs9y)
         def VAR(terp):
             name = terp.lexer.nextWord()
-            if name == None: raise SyntaxError('Invalid Syntax')
-            terp.define(name, makeVariable())
+            if name is None: raise SyntaxError('Invalid Syntax')
+            var = Variable()
+            terp.define(name, var.access)
+        def CONST(terp):
+            name = terp.lexer.nextWord()
+            val = terp.lexer.nextWord()
+            if name is None or val is None: raise SyntaxError('Invalid Syntax')
+            const = Constant(val)
+            terp.define(name, const.access)
         def STORE(terp):
             if terp.stack.__len__() < 2: raise IndexError('Not enough items on stack')
-            ref = terp.stack.pop()
             val = terp.stack.pop()
-            ref['value'] = val
+            ref = terp.stack.pop()
+            ref.value = val
         def FETCH(terp):
             if terp.stack.__len__() < 1: raise IndexError('Not enough items on stack')
             ref = terp.stack.pop()
-            terp.stack.append(ref['value'])
+            terp.stack.append(ref.value)
         return {
             "VAR":   VAR,
+            "CONST": CONST,
             "STORE": STORE,
             "FETCH": FETCH
             }
