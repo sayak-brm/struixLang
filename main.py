@@ -12,6 +12,8 @@
 ##   See the License for the specific language governing permissions and
 ##   limitations under the License.
 
+import primitives
+
 class Lexer:
     def __init__(self, text):
         self.words = text.split()
@@ -35,7 +37,7 @@ class Terp:
         self.dictionary.update(newWords)
         
     def run(self, text):
-        lexer = Lexer(text)
+        lexer = Lexer(text) #TODO: Make lexer an obj property for read aheads.
         word = None
         num = None
         while lexer.peekWord():
@@ -51,40 +53,7 @@ class Terp:
             else:
                 raise ValueError('Unknown Word: {}'.format(word))
 
-class AddWords:
-    def __init__(self, terp):
-        wordSets = ['display', 'control', 'math']
-        for wordSet in wordSets:
-            exec('terp.addWords(self.words4{}())'.format(wordSet))
-        
-    def words4display(self):
-        def PRINT(terp):
-            if terp.stack.__len__() < 1: raise IndexError('Not enough items on stack')
-            print(terp.stack.pop())
-        def PSTACK(terp):
-            print(" ".join(str(val) for val in terp.stack))
-        return {
-            "PRINT":  PRINT,
-            "PSTACK": PSTACK
-            }
-    
-    def words4control(self):
-        def EXIT(terp):
-            exit()
-        return {
-            "EXIT": EXIT
-            }
-    
-    def words4math(self):
-        def CALCGEN(op):
-            def CALC(terp):
-                if terp.stack.__len__() < 2: raise IndexError('Not enough items on stack')
-                exec('terp.stack.append(terp.stack.pop(){}terp.stack.pop())'.format(op))
-            return CALC
-        ops = ['+', '-', '*', '/', '%', '//', '**', '|', '^', '&', '<<', '>>']
-        return dict(zip(ops, [CALCGEN(op) for op in ops]))
-
 terp = Terp()
-AddWords(terp)
+primitives.AddWords(terp)
 while True:
     terp.run(input('>>> '))
