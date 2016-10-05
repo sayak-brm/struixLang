@@ -15,7 +15,7 @@
 class AddWords:
     ''' Provides Built-in Words for the struixLang Interpreter. '''
     def __init__(self, terp):
-        wordSets = ['output', 'control', 'math', 'stack']
+        wordSets = ['output', 'control', 'math', 'stack', 'variables']
         for wordSet in wordSets:
             terp.addWords(eval('self.words4{}()'.format(wordSet)))
 
@@ -97,4 +97,28 @@ class AddWords:
             "SWAP": SWAP,
             "OVER": OVER,
             "ROT":  ROT
+            }
+    @staticmethod
+    def words4variables():
+        def makeVariable():
+            def Variable(terp):
+                terp.stack.append({'value': None})
+            return Variable
+        def VAR(terp):
+            name = terp.lexer.nextWord()
+            if name == None: raise SyntaxError('Invalid Syntax')
+            terp.define(name, makeVariable())
+        def STORE(terp):
+            if terp.stack.__len__() < 2: raise IndexError('Not enough items on stack')
+            ref = terp.stack.pop()
+            val = terp.stack.pop()
+            ref['value'] = val
+        def FETCH(terp):
+            if terp.stack.__len__() < 1: raise IndexError('Not enough items on stack')
+            ref = terp.stack.pop()
+            terp.stack.append(ref['value'])
+        return {
+            "VAR":   VAR,
+            "STORE": STORE,
+            "FETCH": FETCH
             }

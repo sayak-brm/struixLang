@@ -21,12 +21,12 @@ class Lexer:
         self.n = 0
         
     def nextWord(self):
-        if self.n >= self.words.__len__(): return
+        if self.n >= self.words.__len__(): return None
         self.n += 1
         return self.words[self.n-1]
     
     def peekWord(self):
-        if self.n >= self.words.__len__(): return
+        if self.n >= self.words.__len__(): return None
         return self.words[self.n]
 
 class Terp:
@@ -37,13 +37,17 @@ class Terp:
         
     def addWords(self, newWords):
         self.dictionary.update(newWords)
+
+    def define(self, word, code):
+        self.dictionary[word.upper()] = code
         
     def run(self, text):
-        lexer = Lexer(text) #TODO: Make lexer an obj property for read aheads.
+        ''' Executes struixLang code. '''
+        self.lexer = Lexer(text)
         word = None
         num = None
-        while lexer.peekWord():
-            word = lexer.nextWord().upper()
+        while self.lexer.peekWord():
+            word = self.lexer.nextWord().upper()
             try: num = int(word)
             except ValueError:
                 try: num = float(word)
