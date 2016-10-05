@@ -13,10 +13,11 @@
 ##   limitations under the License.
 
 class AddWords:
+    ''' Provides Built-in Words for the struixLang Interpreter. '''
     def __init__(self, terp):
         wordSets = ['output', 'control', 'math', 'stack']
         for wordSet in wordSets:
-            exec('terp.addWords(self.words4{}())'.format(wordSet))
+            terp.addWords(eval('self.words4{}()'.format(wordSet)))
 
     @staticmethod
     def words4output():
@@ -50,7 +51,7 @@ class AddWords:
             ''' Generates Words for a specefic operation. '''
             def CALC(terp):
                 if terp.stack.__len__() < 2: raise IndexError('Not enough items on stack')
-                exec('terp.stack.append(terp.stack.pop(){}terp.stack.pop())'.format(op))
+                terp.stack.append(eval('terp.stack.pop(){}terp.stack.pop()'.format(op)))
             return CALC
         ops = ['+', '-', '*', '/', '%', '//', '**', '|', '^', '&', '<<', '>>']
         return dict(zip(ops, [CALCGEN(op) for op in ops]))

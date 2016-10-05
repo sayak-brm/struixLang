@@ -15,6 +15,7 @@
 import primitives
 
 class Lexer:
+    ''' Lexer for struixLang. '''
     def __init__(self, text):
         self.words = text.split()
         self.n = 0
@@ -29,6 +30,7 @@ class Lexer:
         return self.words[self.n]
 
 class Terp:
+    ''' Interpreter for struixLang. '''
     def __init__(self):
         self.dictionary = {}
         self.stack = []
