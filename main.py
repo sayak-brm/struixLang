@@ -62,9 +62,9 @@ class Terp:
                 self.dictionary[word.upper()](self)
             elif num is not None:
                 self.stack.append(num)
-            elif word[0] is '\'' or word[0] is '\"':
+            elif word[0] in ['\'', '\"']:
                 self.lexer.pushWord(word[1:])
-                self.dictionary['STRING'](self)
+                self.dictionary['STRING'](self, word[0])
             else:
                 raise ValueError('Unknown Word: {}'.format(word))
 

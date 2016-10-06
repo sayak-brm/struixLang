@@ -152,13 +152,13 @@ class AddWords:
     def words4text():
         def COMMENT(terp):
             terp.lexer.clear()
-        def STRING(terp):
+        def STRING(terp, quote):
             collector = ''
             done = False
             while not done:
                 nextWord = terp.lexer.nextWord()
                 if nextWord is None: raise SyntaxError('Invalid Syntax')
-                if nextWord[-1] is '\"' or nextWord[-1] is '\'': done = True
+                if nextWord[-1] is quote: done = True
                 collector += nextWord
                 if done: collector = collector[0:-1]
                 else: collector += ' '
