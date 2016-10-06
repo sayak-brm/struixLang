@@ -15,7 +15,7 @@
 class AddWords:
     ''' Provides Built-in Words for the struixLang Interpreter. '''
     def __init__(self, terp):
-        wordSets = ['output', 'control', 'math', 'stack', 'variables']
+        wordSets = ['output', 'control', 'math', 'stack', 'variables', 'text']
         for wordSet in wordSets:
             terp.addWords(eval('self.words4{}()'.format(wordSet)))
 
@@ -147,4 +147,23 @@ class AddWords:
             "CONST": CONST,
             "STORE": STORE,
             "FETCH": FETCH
+            }
+    @staticmethod
+    def words4text():
+        def COMMENT(terp):
+            terp.lexer.clear()
+        def STRING(terp):
+            collector = ''
+            done = False
+            while not done:
+                nextWord = terp.lexer.nextWord()
+                if nextWord is None: raise SyntaxError('Invalid Syntax')
+                if nextWord[-1] is '\"': done = True
+                collector += nextWord
+                if done: collector = collector[0:-1]
+                else: collector += ' '
+            terp.stack.append(collector)
+        return {
+            "#":  COMMENT,
+            "\"": STRING
             }
