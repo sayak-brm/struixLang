@@ -28,6 +28,10 @@ class Lexer:
     def peekWord(self):
         if self.n >= self.words.__len__(): return None
         return self.words[self.n]
+    
+    def clear(self):
+        self.n = self.words.__len__()
+        
 
 class Terp:
     ''' Interpreter for struixLang. '''

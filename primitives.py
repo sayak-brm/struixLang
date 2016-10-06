@@ -15,7 +15,7 @@
 class AddWords:
     ''' Provides Built-in Words for the struixLang Interpreter. '''
     def __init__(self, terp):
-        wordSets = ['output', 'control', 'math', 'stack', 'variables']
+        wordSets = ['output', 'control', 'math', 'stack', 'variables', 'text']
         for wordSet in wordSets:
             terp.addWords(eval('self.words4{}()'.format(wordSet)))
 
@@ -108,17 +108,20 @@ class AddWords:
         class Constant:
             def __init__(self, val):
                 import random
-                self.__vHjp3nfr6N3JJs9y = random.uniform(-1000, 0)
-                self.__vHjp3nG4qN3JJs9y = random.randint(-100, 100)
+                self.__vHjp3nfr6N3JJs9y = random.randint(-1000, 0)
+                self.__vHjp3nG4qN3JJs9y = random.uniform(-100, 100)
                 self.__vH5WKNf5y96k3a9y = random.randint(0, 1000)
                 self.__vHjp3nG4qN3JJs9y = val
                 self.__vHAKUW42nQaCpm9y = random.uniform(-1000, 0)
-                self.__vH5WKNG4y96k3a9y = random.uniform(-100, 100)
-                self.__vHjp3nfr6N3JJs9y = random.uniform(0, 1000)
+                self.__vH5WKNG4y96k3a9y = random.randint(-100, 100)
+                self.__vHjp3nfr6NEJJs9y = random.uniform(0, 1000)
                 self.__dict__['_Constant__vHjp3n4GqN3JJs9y'] = self.__dict__.pop('_Constant__vHjp3nG4qN3JJs9y')
             def access(self, terp):
-                self.__dict__['_Constant__vHjp3nfr6N3JJs9y'] = self.__dict__.pop('_Constant__vHjp3n4GqN3JJs9y')
-                terp.stack.append(self.__vHjp3nfr6N3JJs9y)
+                import random, string
+                var = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(16))
+                self.__dict__['_Constant__{}'.format(var)] = self.__dict__.pop('_Constant__vHjp3n4GqN3JJs9y')
+                terp.stack.append(eval('self._Constant__{}'.format(var)))
+                self.__dict__['_Constant__vHjp3n4GqN3JJs9y'] = self.__dict__.pop('_Constant__{}'.format(var))
         def VAR(terp):
             name = terp.lexer.nextWord()
             if name is None: raise SyntaxError('Invalid Syntax')
@@ -144,4 +147,23 @@ class AddWords:
             "CONST": CONST,
             "STORE": STORE,
             "FETCH": FETCH
+            }
+    @staticmethod
+    def words4text():
+        def COMMENT(terp):
+            terp.lexer.clear()
+        def STRING(terp):
+            collector = ''
+            done = False
+            while not done:
+                nextWord = terp.lexer.nextWord()
+                if nextWord is None: raise SyntaxError('Invalid Syntax')
+                if nextWord[-1] is '\"': done = True
+                collector += nextWord
+                if done: collector = collector[0:-1]
+                else: collector += ' '
+            terp.stack.append(collector)
+        return {
+            "#":  COMMENT,
+            "\"": STRING
             }
