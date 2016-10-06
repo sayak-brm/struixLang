@@ -28,10 +28,12 @@ class Lexer:
     def peekWord(self):
         if self.n >= self.words.__len__(): return None
         return self.words[self.n]
+
+    def pushWord(self, word):
+        self.words.insert(self.n, word)
     
     def clear(self):
         self.n = self.words.__len__()
-        
 
 class Terp:
     ''' Interpreter for struixLang. '''
@@ -51,15 +53,18 @@ class Terp:
         word = None
         num = None
         while self.lexer.peekWord():
-            word = self.lexer.nextWord().upper()
+            word = self.lexer.nextWord()
             try: num = int(word)
             except ValueError:
                 try: num = float(word)
                 except ValueError: num = None
-            if word in self.dictionary.keys():
-                self.dictionary[word](self)
+            if word.upper() in self.dictionary.keys():
+                self.dictionary[word.upper()](self)
             elif num is not None:
                 self.stack.append(num)
+            elif word[0] is '\'' or word[0] is '\"':
+                self.lexer.pushWord(word[1:])
+                self.dictionary['STRING'](self)
             else:
                 raise ValueError('Unknown Word: {}'.format(word))
 
