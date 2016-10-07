@@ -14,7 +14,8 @@
 
 class AddWords:
     ''' Provides Built-in Words for the struixLang Interpreter. '''
-    def __init__(self, terp, wordSets = ['output', 'control', 'math', 'stack', 'variables', 'text']):
+    def __init__(self, terp, ENABLE_UNSAFE_OPERATIONS = False, wordSets = ['output', 'control', 'math', 'stack', 'variables', 'text', 'unsafeOps']):
+        self.unsafeOps = ENABLE_UNSAFE_OPERATIONS
         for wordSet in wordSets:
             terp.addWords(eval('self.words4{}()'.format(wordSet)))
 
@@ -52,7 +53,9 @@ class AddWords:
             ''' Generates Words for a specefic operation. '''
             def CALC(terp):
                 if terp.stack.__len__() < 2: raise IndexError('Not enough items on stack')
-                terp.stack.append(eval('terp.stack.pop(){}terp.stack.pop()'.format(op)))
+                n1 = terp.stack.pop()
+                n2 = terp.stack.pop()
+                terp.stack.append(eval(n1 + '{}'.format(op) + n2))
             return CALC
         ops = ['+', '-', '*', '**',
                '/', '//', '%', '@',
@@ -154,3 +157,17 @@ class AddWords:
             "#":       COMMENT,
             "STRING":  STRING
             }
+
+    def words4unsafeOps(self):
+        def PYEXEC(terp):
+            exec(terp.stack.pop())
+        def PYEVAL(terp):
+            terp.stack.append(eval(terp.stack.pop()))
+        def PYLITEVAL(terp):
+            terp.stack.append(__import__('ast').literal_eval(terp.stack.pop()))
+        fn = {"PYLITEVAL": PYLITEVAL}
+        if self.unsafeOps: fn.update({
+            "PYEVAL": PYEVAL,
+            "PYEXEC": PYEXEC
+            })
+        return fn

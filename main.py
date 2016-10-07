@@ -70,6 +70,9 @@ class Lexer:
 
 class Terp:
     ''' Interpreter for struixLang. '''
+
+    ENABLE_UNSAFE_OPERATIONS = True
+    
     def __init__(self):
         self.dictionary = {}
         self.stack = []
@@ -102,6 +105,6 @@ class Terp:
                 raise ValueError('Unknown Word: {}'.format(word))
 
 terp = Terp()
-primitives.AddWords(terp)
+primitives.AddWords(terp, terp.ENABLE_UNSAFE_OPERATIONS)
 while True:
     terp.run(input('>>> '))
