@@ -17,23 +17,56 @@ import primitives
 class Lexer:
     ''' Lexer for struixLang. '''
     def __init__(self, text):
-        self.words = text.split()
+        self.text=text
         self.n = 0
         
     def nextWord(self):
-        if self.n >= self.words.__len__(): return None
-        self.n += 1
-        return self.words[self.n-1]
+        import string
+        self.whitespace = ''
+        if self.n >= len(self.text): return ''
+        while self.text[self.n] in string.whitespace:
+            self.whitespace += self.text[self.n]
+            self.n += 1
+            if self.n >= len(self.text): return ''
+        n2 = self.n
+        while self.text[n2] not in string.whitespace:
+            n2 += 1
+            if n2 >= len(self.text): break
+        word = self.text[self.n:n2]
+        n2 += 1
+        self.n = n2
+        return word
     
     def peekWord(self):
-        if self.n >= self.words.__len__(): return None
-        return self.words[self.n]
+        import string
+        n1 = self.n
+        if n1 >= len(self.text): return ''
+        while self.text[n1] in string.whitespace:
+            n1 += 1
+            if n1 >= len(self.text): return ''
+        n2 = n1
+        while self.text[n2] not in string.whitespace:
+            n2 += 1
+            if n2 >= len(self.text): break
+        word = self.text[n1:n2]
+        return word
 
-    def pushWord(self, word):
-        self.words.insert(self.n, word)
+    def charsTill(self, end):
+        if self.n >= len(self.text): return ''
+        n2 = self.n
+        while self.text[n2] is not end:
+            n2 += 1
+            if n2 >= len(self.text): raise IndexError('string index out of range.')
+        chars = self.text[self.n:n2]
+        n2 += 1
+        self.n = n2
+        return chars
     
+    def pushWord(self, word):
+        self.n -= len(word) + 1
+        
     def clear(self):
-        self.n = self.words.__len__()
+        self.n = len(self.text)
 
 class Terp:
     ''' Interpreter for struixLang. '''
