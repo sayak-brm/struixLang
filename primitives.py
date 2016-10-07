@@ -160,14 +160,15 @@ class AddWords:
 
     def words4unsafeOps(self):
         def PYEXEC(terp):
+            if not self.unsafeOps: raise PermissionError('Unsafe Operations are disabled')
             exec(terp.stack.pop())
         def PYEVAL(terp):
+            if not self.unsafeOps: raise PermissionError('Unsafe Operations are disabled')
             terp.stack.append(eval(terp.stack.pop()))
         def PYLITEVAL(terp):
             terp.stack.append(__import__('ast').literal_eval(terp.stack.pop()))
-        fn = {"PYLITEVAL": PYLITEVAL}
-        if self.unsafeOps: fn.update({
-            "PYEVAL": PYEVAL,
-            "PYEXEC": PYEXEC
-            })
-        return fn
+        return {
+            "PYEVAL":    PYEVAL,
+            "PYEXEC":    PYEXEC,
+            "PYLITEVAL": PYLITEVAL
+            }
