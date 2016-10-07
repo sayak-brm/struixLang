@@ -17,21 +17,56 @@ import primitives
 class Lexer:
     ''' Lexer for struixLang. '''
     def __init__(self, text):
-        self.words = text.split()
+        self.text=text
         self.n = 0
         
     def nextWord(self):
-        if self.n >= self.words.__len__(): return None
-        self.n += 1
-        return self.words[self.n-1]
+        import string
+        self.whitespace = ''
+        if self.n >= len(self.text): return ''
+        while self.text[self.n] in string.whitespace:
+            self.whitespace += self.text[self.n]
+            self.n += 1
+            if self.n >= len(self.text): return ''
+        n2 = self.n
+        while self.text[n2] not in string.whitespace:
+            n2 += 1
+            if n2 >= len(self.text): break
+        word = self.text[self.n:n2]
+        n2 += 1
+        self.n = n2
+        return word
     
     def peekWord(self):
-        if self.n >= self.words.__len__(): return None
-        return self.words[self.n]
+        import string
+        n1 = self.n
+        if n1 >= len(self.text): return ''
+        while self.text[n1] in string.whitespace:
+            n1 += 1
+            if n1 >= len(self.text): return ''
+        n2 = n1
+        while self.text[n2] not in string.whitespace:
+            n2 += 1
+            if n2 >= len(self.text): break
+        word = self.text[n1:n2]
+        return word
+
+    def charsTill(self, end):
+        if self.n >= len(self.text): return ''
+        n2 = self.n
+        while self.text[n2] is not end:
+            n2 += 1
+            if n2 >= len(self.text): raise IndexError('string index out of range.')
+        chars = self.text[self.n:n2]
+        n2 += 1
+        self.n = n2
+        return chars
     
-    def clear(self):
-        self.n = self.words.__len__()
+    def pushWord(self, word):
+        self.n -= len(word) + 1
         
+    def clear(self):
+        self.n = len(self.text)
 
 class Terp:
     ''' Interpreter for struixLang. '''
@@ -51,15 +86,18 @@ class Terp:
         word = None
         num = None
         while self.lexer.peekWord():
-            word = self.lexer.nextWord().upper()
+            word = self.lexer.nextWord()
             try: num = int(word)
             except ValueError:
                 try: num = float(word)
                 except ValueError: num = None
-            if word in self.dictionary.keys():
-                self.dictionary[word](self)
+            if word.upper() in self.dictionary.keys():
+                self.dictionary[word.upper()](self)
             elif num is not None:
                 self.stack.append(num)
+            elif word[0] in ['\'', '\"']:
+                self.lexer.pushWord(word[1:])
+                self.dictionary['STRING'](self, word[0])
             else:
                 raise ValueError('Unknown Word: {}'.format(word))
 
