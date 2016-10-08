@@ -15,8 +15,8 @@
 class AddWords:
     ''' Provides Built-in Words for the struixLang Interpreter. '''
     def __init__(self, terp, ENABLE_UNSAFE_OPERATIONS = False,
-                 wordSets = ['output', 'control', 'math', 'stack',
-                             'variables', 'text', 'unsafeOps',
+                 wordSets = ['output', 'execution', 'math', 'stack',
+                             'values', 'text', 'pythonOps',
                              'compiling', 'lists']):
         self.unsafeOps = ENABLE_UNSAFE_OPERATIONS
         for wordSet in wordSets:
@@ -24,6 +24,7 @@ class AddWords:
 
     @staticmethod
     def makeWord(code):
+        ''' Makes an executable word from list. '''
         def word(terp):
             pointer = 0
             while pointer < len(code):
@@ -50,18 +51,17 @@ class AddWords:
             }
 
     @staticmethod
-    def words4control():
+    def words4execution():
         ''' Provides Words for controlling execution. '''
         def RAISE(terp):
+            ''' Raises an error. '''
             error = terp.stack.pop()
             msg = terp.stack.pop()
             print('ERROR: {} - {}'.format(error, msg))
             try:
                 exec('raise {}(\'{}\')'.format(error, msg))
             except NameError:
-                raise RuntimeError('{} - {}'.format(error,
-                                                    msg))from exc
-                
+                raise RuntimeError('{} - {}'.format(error, msg))
         def EXIT(terp):
             ''' Terminates the execution. '''
             exit()
@@ -76,17 +76,19 @@ class AddWords:
         def CALCGEN(op):
             ''' Generates Words for a specific operation. '''
             def CALC(terp):
+                ''' Template word for operations. '''
                 if len(terp.stack) < 2:
                     raise IndexError('Not enough items on stack.')
                 n1 = terp.stack.pop()
                 n2 = terp.stack.pop()
-                terp.stack.append(eval(str(n1) + '{}'.format(op) + str(n2)))
+                terp.stack.append(eval(str(n1) + op + str(n2)))
             return CALC
-        ops = ['+', '-', '*', '**',
-               '/', '//', '%', '@',
-               '<<', '>>', '&', '|',
-               '^', '~', '<', '>',
-               '<=', '>=', '==', '!=']
+        ops = ['+',  '-',  '*',  '**',
+               '/',  '//', '%',  '@',
+               '<<', '>>', '&',  '|',
+               '^',  '~',  '<',  '>',
+               '<=', '>=', '==', '!=',
+               'in', 'is', 'or', 'and']
         return dict(zip(ops, [CALCGEN(op) for op in ops]))
 
     @staticmethod
@@ -137,9 +139,12 @@ class AddWords:
             "ROT":  ROT
             }
     @staticmethod
-    def words4variables():
+    def words4values():
+        ''' Provides support for variables and constants. '''
         def VAR(terp):
+            ''' Provides creation of variables. '''
             class Variable:
+                ''' Provides a reference object for variables. '''
                 def __init__(self, val=None):
                     self.value = val
                 def access(self, terp):
@@ -150,7 +155,9 @@ class AddWords:
             var = Variable()
             terp.define(name, var.access)
         def CONST(terp):
+            ''' Provides creation of constants. '''
             class Constant:
+                ''' Provides a read-only reference object for variables. '''
                 def __init__(self, val):
                     object.__setattr__(self, 'val', val)
                 def __setattr__(self, name, val):
@@ -166,12 +173,14 @@ class AddWords:
             const = Constant(val)
             terp.define(name, const.access)
         def STORE(terp):
+            ''' Helps storing values to variables. '''
             if len(terp.stack) < 2:
                 raise IndexError('Not enough items on stack.')
             val = terp.stack.pop()
             ref = terp.stack.pop()
             ref.value = val
         def FETCH(terp):
+            ''' Helps retrieviing values from variables. '''
             if len(terp.stack) < 1:
                 raise IndexError('Not enough items on stack.')
             ref = terp.stack.pop()
@@ -187,8 +196,10 @@ class AddWords:
     @staticmethod
     def words4text():
         def COMMENT(terp):
+            ''' Adds support for comments. '''
             terp.lexer.clear()
         def STRING(terp, quote):
+            ''' Helps in creation of comments. '''
             return terp.lexer.charsTill(quote)
         STRING.__dict__['immediate'] = True
         COMMENT.__dict__['immediate'] = True
@@ -197,16 +208,20 @@ class AddWords:
             "STRING":  STRING
             }
 
-    def words4unsafeOps(self):
+    def words4pythonOps(self):
+        ''' Provides interfaces to the Python backend. '''
         def PYEXEC(terp):
+            ''' Executes Python code. '''
             if not self.unsafeOps:
                 raise PermissionError('Unsafe Operations are disabled.')
             exec(terp.stack.pop())
         def PYEVAL(terp):
+            ''' Evaluates value of Python code. '''
             if not self.unsafeOps:
                 raise PermissionError('Unsafe Operations are disabled.')
             terp.stack.append(eval(terp.stack.pop()))
         def PYLITEVAL(terp):
+            ''' Evaluates value of Python expressions. '''
             terp.stack.append(__import__('ast').literal_eval(terp.stack.pop()))
         return {
             "PYEVAL":    PYEVAL,
@@ -215,13 +230,16 @@ class AddWords:
             }
     
     def words4compiling(self):
+        ''' Supports creation of user-defined words. '''
         def DEF(terp):
+            ''' Marks beginning of user-defined words. '''
             name = terp.lexer.nextWord()
             if name is '':
                 raise SyntaxError('Invalid Syntax')
             terp.newWord = name
             terp.startCompile()
         def END(terp):
+            ''' Marks end of user-defined words. '''
             code = terp.stack[:]
             terp.stack = []
             terp.define(terp.newWord, self.makeWord(code))
@@ -230,11 +248,15 @@ class AddWords:
         END.__dict__['immediate'] = True
         return {
             "DEF": DEF,
-            "END": END
+            "END": END,
+            ":":   DEF,
+            ";":   END
             }
 
-    def words4lists(self):
+    @staticmethod
+    def words4lists():
         def LIST(terp):
+            ''' Creates a list. '''
             import types
             lst = []
             dataStack = terp.stack
@@ -255,22 +277,40 @@ class AddWords:
             terp.stack = dataStack
             terp.stack.append(lst)
         def LENGTH(terp):
+            ''' Gives the length of a list. '''
             if len(terp.stack) < 1:
                 raise IndexError('Not enough items on stack.')
             terp.stack.append(len(terp.stack.pop()))
         def ITEM(terp):
+            ''' Gives an element of a list. '''
             if len(terp.stack) < 2:
                 raise IndexError('Not enough items on stack.')
             key = terp.stack.pop()
             terp.stack.append(terp.stack.pop()[key])
-        def RUN(terp):
-            if len(terp.stack) < 1:
-                raise IndexError('Not enough items on stack.')
-            terp.interpret(self.makeWord(terp.stack.pop()))
         LIST.__dict__['immediate'] = True
         return {
             "[":      LIST,
             "LENGTH": LENGTH,
-            "ITEM":   ITEM,
-            "RUN":    RUN
+            "ITEM":   ITEM
+            }
+
+    def words4control(self):
+        ''' Provides control structures. '''
+        def RUN(terp):
+            ''' Provides execution of lists containing struixLang code. '''
+            if len(terp.stack) < 1:
+                raise IndexError('Not enough items on stack.')
+            terp.interpret(self.makeWord(terp.stack.pop()))
+        def TIMES(terp):
+            ''' Iterating structure like for-loop. '''
+            if len(terp.stack) < 2:
+                raise IndexError('Not enough items on stack.')
+            n = terp.stack.pop()
+            code = terp.stack.pop()
+            word = self.makemakeWord(code)
+            for _ in range(n):
+                word(terp)
+        return {
+            "RUN":   RUN,
+            "TIMES": TIMES
             }
