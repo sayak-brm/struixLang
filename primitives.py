@@ -16,17 +16,27 @@ class AddWords:
     ''' Provides Built-in Words for the struixLang Interpreter. '''
     def __init__(self, terp, ENABLE_UNSAFE_OPERATIONS = False,
                  wordSets = ['output', 'control', 'math', 'stack',
-                             'variables', 'text', 'unsafeOps', 'compiling']):
+                             'variables', 'text', 'unsafeOps',
+                             'compiling', 'lists']):
         self.unsafeOps = ENABLE_UNSAFE_OPERATIONS
         for wordSet in wordSets:
             terp.addWords(eval('self.words4{}()'.format(wordSet)))
+
+    @staticmethod
+    def makeWord(code):
+        def word(terp):
+            pointer = 0
+            while pointer < len(code):
+                terp.interpret(code[pointer])
+                pointer += 1
+        return word
 
     @staticmethod
     def words4output():
         ''' Provides Words for output operations. '''
         def PRINT(terp):
             ''' Pops & Displays the Top of Stack (ToS). '''
-            if terp.stack.__len__() < 1:
+            if len(terp.stack) < 1:
                 raise IndexError('Not enough items on stack.')
             print(terp.stack.pop())
         def PSTACK(terp):
@@ -66,7 +76,7 @@ class AddWords:
         def CALCGEN(op):
             ''' Generates Words for a specific operation. '''
             def CALC(terp):
-                if terp.stack.__len__() < 2:
+                if len(terp.stack) < 2:
                     raise IndexError('Not enough items on stack.')
                 n1 = terp.stack.pop()
                 n2 = terp.stack.pop()
@@ -84,17 +94,17 @@ class AddWords:
         ''' Provides Words for Stack Operations. '''
         def DUP(terp):
             ''' Duplicate Top of Stack (ToS). '''
-            if terp.stack.__len__() < 1:
+            if len(terp.stack) < 1:
                 raise IndexError('Not enough items on stack.')
             terp.stack.append(terp.stack[-1])
         def DROP(terp):
             ''' Remove Top of Stack (ToS). '''
-            if terp.stack.__len__() < 1:
+            if len(terp.stack) < 1:
                 raise IndexError('Not enough items on stack.')
             terp.stack.pop()
         def SWAP(terp):
             ''' Exchange positions of ToS and second item on stack (2oS). '''
-            if terp.stack.__len__() < 2:
+            if len(terp.stack) < 2:
                 raise IndexError('Not enough items on stack.')
             tos = terp.stack.pop()
             _2os = terp.stack.pop()
@@ -102,7 +112,7 @@ class AddWords:
             terp.stack.append(_2os)
         def OVER(terp):
             ''' Copy 2oS on top of stack. '''
-            if terp.stack.__len__() < 2:
+            if len(terp.stack) < 2:
                 raise IndexError('Not enough items on stack.')
             tos = terp.stack.pop()
             _2os = terp.stack.pop()
@@ -111,7 +121,7 @@ class AddWords:
             terp.stack.append(_2os)
         def ROT(terp):
             ''' Copy 3oS on top of stack. '''
-            if terp.stack.__len__() < 3:
+            if len(terp.stack) < 3:
                 raise IndexError('Not enough items on stack.')
             tos = terp.stack.pop()
             _2os = terp.stack.pop()
@@ -156,13 +166,13 @@ class AddWords:
             const = Constant(val)
             terp.define(name, const.access)
         def STORE(terp):
-            if terp.stack.__len__() < 2:
+            if len(terp.stack) < 2:
                 raise IndexError('Not enough items on stack.')
             val = terp.stack.pop()
             ref = terp.stack.pop()
             ref.value = val
         def FETCH(terp):
-            if terp.stack.__len__() < 1:
+            if len(terp.stack) < 1:
                 raise IndexError('Not enough items on stack.')
             ref = terp.stack.pop()
             terp.stack.append(ref.value)
@@ -203,8 +213,8 @@ class AddWords:
             "PYEXEC":    PYEXEC,
             "PYLITEVAL": PYLITEVAL
             }
-    @staticmethod
-    def words4compiling():
+    
+    def words4compiling(self):
         def DEF(terp):
             name = terp.lexer.nextWord()
             if name is '':
@@ -212,16 +222,9 @@ class AddWords:
             terp.newWord = name
             terp.startCompile()
         def END(terp):
-            def makeWord(code):
-                def word(terp):
-                    pointer = 0
-                    while pointer < len(code):
-                        terp.interpret(code[pointer])
-                        pointer += 1
-                return word
             code = terp.stack[:]
             terp.stack = []
-            terp.define(terp.newWord, makeWord(code))
+            terp.define(terp.newWord, self.makeWord(code))
             terp.stopCompile()
         DEF.__dict__['immediate'] = True
         END.__dict__['immediate'] = True
@@ -229,4 +232,45 @@ class AddWords:
             "DEF": DEF,
             "END": END
             }
-            
+
+    def words4lists(self):
+        def LIST(terp):
+            import types
+            lst = []
+            dataStack = terp.stack
+            terp.stack = lst
+            while True:
+                nextWord = terp.lexer.nextWord()
+                if nextWord == '':
+                    terp.stack = dataStack
+                    raise SyntaxError('Invalid Syntax')
+                elif nextWord == ']':
+                    break
+                nextWord = terp.compile(nextWord)
+                if isinstance(nextWord, types.FunctionType)\
+                   and nextWord.__dict__.get('immediate', False):
+                    nextWord(terp)
+                else:
+                    terp.stack.append(nextWord)
+            terp.stack = dataStack
+            terp.stack.append(lst)
+        def LENGTH(terp):
+            if len(terp.stack) < 1:
+                raise IndexError('Not enough items on stack.')
+            terp.stack.append(len(terp.stack.pop()))
+        def ITEM(terp):
+            if len(terp.stack) < 2:
+                raise IndexError('Not enough items on stack.')
+            key = terp.stack.pop()
+            terp.stack.append(terp.stack.pop()[key])
+        def RUN(terp):
+            if len(terp.stack) < 1:
+                raise IndexError('Not enough items on stack.')
+            terp.interpret(self.makeWord(terp.stack.pop()))
+        LIST.__dict__['immediate'] = True
+        return {
+            "[":      LIST,
+            "LENGTH": LENGTH,
+            "ITEM":   ITEM,
+            "RUN":    RUN
+            }

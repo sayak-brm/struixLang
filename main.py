@@ -116,13 +116,11 @@ class Terp:
         word = None
         while self.lexer.peekWord():
             word = self.compile(self.lexer.nextWord())
-            if self.immediate:
+            if self.immediate or not self.isCompiling():
                 self.interpret(word)
                 self.immediate = False
-            elif self.isCompiling():
-                self.stack.append(word)
             else:
-                self.interpret(word)
+                self.stack.append(word)
 
     def interpret(self, word):
         import types
