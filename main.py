@@ -23,11 +23,13 @@ class Lexer:
     def nextWord(self):
         import string
         self.whitespace = ''
-        if self.n >= len(self.text): return ''
+        if self.n >= len(self.text):
+            return ''
         while self.text[self.n] in string.whitespace:
             self.whitespace += self.text[self.n]
             self.n += 1
-            if self.n >= len(self.text): return ''
+            if self.n >= len(self.text):
+                return ''
         n2 = self.n
         while self.text[n2] not in string.whitespace:
             n2 += 1
@@ -40,30 +42,35 @@ class Lexer:
     def peekWord(self):
         import string
         n1 = self.n
-        if n1 >= len(self.text): return ''
+        if n1 >= len(self.text):
+            return ''
         while self.text[n1] in string.whitespace:
             n1 += 1
-            if n1 >= len(self.text): return ''
+            if n1 >= len(self.text):
+                return ''
         n2 = n1
         while self.text[n2] not in string.whitespace:
             n2 += 1
-            if n2 >= len(self.text): break
+            if n2 >= len(self.text):
+                break
         word = self.text[n1:n2]
         return word
 
     def charsTill(self, end):
-        if self.n >= len(self.text): return ''
+        if self.n >= len(self.text):
+            return ''
         n2 = self.n
         while self.text[n2] is not end:
             n2 += 1
-            if n2 >= len(self.text): raise IndexError('string index out of range.')
+            if n2 >= len(self.text):
+                raise IndexError('string index out of range.')
         chars = self.text[self.n:n2]
         n2 += 1
         self.n = n2
         return chars
     
-    def pushWord(self, word):
-        self.n -= len(word) + 1
+    def rewind(self, places):
+        self.n -= places + 1
         
     def clear(self):
         self.n = len(self.text)
@@ -75,34 +82,78 @@ class Terp:
     
     def __init__(self):
         self.dictionary = {}
-        self.stack = []
+        self.dataStack = []
+        self.compileBuffer = []
+        self.stack = self.dataStack
+        self.immediate = False
+        self.newWord = None
         
     def addWords(self, newWords):
         self.dictionary.update(newWords)
 
     def define(self, word, code):
         self.dictionary[word.upper()] = code
+
+    def lookup(self, word):
+        if word.upper() in self.dictionary.keys():
+            return self.dictionary[word.upper()]
+        return None
+
+    @staticmethod
+    def parseNumber(string):
+        try:
+            num = int(string)
+        except ValueError:
+            try:
+                num = float(string)
+            except ValueError:
+                num = None
+        return num
         
     def run(self, text):
         ''' Executes struixLang code. '''
         self.lexer = Lexer(text)
         word = None
-        num = None
         while self.lexer.peekWord():
-            word = self.lexer.nextWord()
-            try: num = int(word)
-            except ValueError:
-                try: num = float(word)
-                except ValueError: num = None
-            if word.upper() in self.dictionary.keys():
-                self.dictionary[word.upper()](self)
-            elif num is not None:
-                self.stack.append(num)
-            elif word[0] in ['\'', '\"']:
-                self.lexer.pushWord(word[1:])
-                self.dictionary['STRING'](self, word[0])
+            word = self.compile(self.lexer.nextWord())
+            if self.immediate:
+                self.interpret(word)
+                self.immediate = False
+            elif self.isCompiling():
+                self.stack.append(word)
             else:
-                raise ValueError('Unknown Word: {}'.format(word))
+                self.interpret(word)
+
+    def interpret(self, word):
+        import types
+        if isinstance(word, types.FunctionType):
+            word(self)
+        else:
+            self.stack.append(word)
+
+    def compile(self, word):
+        word = word.upper()
+        num = self.parseNumber(word)
+        fn = self.lookup(word)
+        if fn:
+            self.immediate = fn.__dict__.get('immediate', False)
+            return fn
+        elif num:
+            return num
+        elif word[0] in ['\'', '\"']:
+            self.lexer.rewind(len(word[1:]))
+            return self.lookup('STRING')(self, word[0])
+        else:
+            raise ValueError('Unknown Word: {}'.format(word))
+
+    def startCompile(self):
+        self.stack = self.compileBuffer
+
+    def stopCompile(self):
+        self.stack = self.dataStack
+
+    def isCompiling(self):
+        return self.stack is self.compileBuffer
 
 terp = Terp()
 primitives.AddWords(terp, terp.ENABLE_UNSAFE_OPERATIONS)
