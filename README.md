@@ -16,8 +16,6 @@ Also, a **dictionary** is present, containing **words** *(functions/subroutines)
 
 Several primitive *(read:built-in)* words are pre-defined and mechanisms to define new *user-defined* words within struixLang itself are in place.
 
-###### Note: struixLang does not differentiate between primitive words and user-defined words (once defined). More on this later.
-
 ----
 
 ## Data Model:

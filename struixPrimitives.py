@@ -14,12 +14,12 @@
 
 class AddWords:
     ''' Provides Built-in Words for the struixLang Interpreter. '''
-    def __init__(self, terp, ENABLE_UNSAFE_OPERATIONS = False,
-                 wordSets = None):
+    def __init__(self, terp, ENABLE_UNSAFE_OPERATIONS = False, wordSets = None):
+        ''' Collects the primitive words and ipdates the dicionary. '''
         if wordSets is None:
-            wordSets = ['output', 'execution', 'math', 'stack',
-                             'values', 'text', 'pythonOps', 'logic',
-                             'compiling', 'lists', 'control']
+            wordSets = ['output', 'execution', 'math', 'stack', 'values',
+                        'values', 'compiling', 'text', 'logic', 'control',
+                        'lists',  'pythonOps']
         self.unsafeOps = ENABLE_UNSAFE_OPERATIONS
         for wordSet in wordSets:
             terp.addWords(eval('self.words4{}()'.format(wordSet)))
@@ -28,6 +28,7 @@ class AddWords:
     def makeWord(code):
         ''' Makes an executable word from list. '''
         def word(terp):
+            ''' Template for a list executor. '''
             pointer = 0
             while pointer < len(code):
                 terp.interpret(code[pointer])
@@ -148,10 +149,12 @@ class AddWords:
         def VAR(terp):
             ''' Provides creation of variables. '''
             class Variable:
-                ''' Provides a reference object for variables. '''
+                ''' Provides a template class for variables. '''
                 def __init__(self, val=None):
+                    ''' Initializes a Variable object. '''
                     self.value = val
                 def access(self, terp):
+                    ''' Puts a reference to the variable value on the stack. '''
                     terp.stack.append(self)
             name = terp.lexer.nextWord()
             if name is '':
@@ -161,14 +164,17 @@ class AddWords:
         def CONST(terp):
             ''' Provides creation of constants. '''
             class Constant:
-                ''' Provides a read-only reference object for variables. '''
+                ''' Provides a template class with a write-once value. '''
                 def __init__(self, val):
+                    ''' Initializes a Constant object with a value. '''
                     object.__setattr__(self, 'val', val)
                 def __setattr__(self, name, val):
+                    ''' Provides a descriptor to prevent changing values. '''
                     if name is 'val':
                         raise AttributeError('Constant Attribute.')
                     object.__setattr__(self, name, val)
                 def access(self, terp):
+                    ''' Puts the value of the constant on the stack. '''
                     terp.stack.append(self.val)
             name = terp.lexer.nextWord()
             val = terp.lexer.nextWord()
@@ -201,6 +207,7 @@ class AddWords:
             }
     @staticmethod
     def words4text():
+        ''' Adds words for handling of commentsand strings. '''
         def COMMENT(terp):
             ''' Adds support for comments. '''
             terp.lexer.clear()
@@ -261,6 +268,7 @@ class AddWords:
 
     @staticmethod
     def words4lists():
+        ''' Words for list management. '''
         def LIST(terp):
             ''' Creates a list. '''
             import types
@@ -303,12 +311,15 @@ class AddWords:
     @staticmethod
     def words4logic():
         def NOT(terp):
+            ''' Provides logical operator NOT(!). '''
             if len(terp.stack) < 1:
                 raise IndexError('Not enough items on stack.')
             terp.stack.append(not terp.stack.pop())
         def TRUE(terp):
+            ''' Represents the boolean True. '''
             terp.stack.append(True)
         def FALSE(terp):
+            ''' Represents the boolean False. '''
             terp.stack.append(False)
         return {
             "NOT":   NOT,
@@ -333,18 +344,21 @@ class AddWords:
             for _ in range(n):
                 word(terp)
         def IFTRUE(terp):
+            ''' Performs a task on recieving TRUE. '''
             if len(terp.stack) < 2:
                 raise IndexError('Not enough items on stack.')
             code = terp.stack.pop()
             if terp.stack.pop():
                 terp.interpret(self.makeWord(code))
         def IFFALSE(terp):
+            ''' Performs a task on recieving FALSE. '''
             if len(terp.stack) < 2:
                 raise IndexError('Not enough items on stack.')
             code = terp.stack.pop()
             if not terp.stack.pop():
                 terp.interpret(self.makeWord(code))
         def IFELSE(terp):
+            ''' Performs different task for different boolean values. '''
             if len(terp.stack) < 2:
                 raise IndexError('Not enough items on stack.')
             code2 = terp.stack.pop()
@@ -354,6 +368,7 @@ class AddWords:
             else:
                 terp.interpret(self.makeWord(code2))
         def WHILE(terp):
+            ''' Variable-iteration, entry-control loop. '''
             if len(terp.stack) < 2:
                 raise IndexError('Not enough items on stack.')
             code = self.makeWord(terp.stack.pop())
@@ -366,6 +381,7 @@ class AddWords:
                     break
                 code(terp)
         def DOWHILE(terp):
+            ''' Variable-iteration, exit-control loop. '''
             if len(terp.stack) < 2:
                 raise IndexError('Not enough items on stack.')
             code = self.makeWord(terp.stack.pop())
