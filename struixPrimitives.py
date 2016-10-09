@@ -310,6 +310,7 @@ class AddWords:
 
     @staticmethod
     def words4logic():
+        ''' Words for logical and boolean operations. '''
         def NOT(terp):
             ''' Provides logical operator NOT(!). '''
             if len(terp.stack) < 1:

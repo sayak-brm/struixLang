@@ -17,22 +17,30 @@ class Lexer:
     def __init__(self, text):
         self.text=text
         self.n = 0
-        
-    def nextWord(self):
+
+    def getWord(self):
         import string
-        self.whitespace = ''
-        if self.n >= len(self.text):
-            return ''
-        while self.text[self.n] in string.whitespace:
-            self.whitespace += self.text[self.n]
-            self.n += 1
-            if self.n >= len(self.text):
-                return ''
         n2 = self.n
         while self.text[n2] not in string.whitespace:
             n2 += 1
             if n2 >= len(self.text): break
         word = self.text[self.n:n2]
+        return word
+
+    def skipWhitespace(self):
+        while self.text[self.n] in string.whitespace:
+            self.whitespace += self.text[self.n]
+            self.n += 1
+            if self.n >= len(self.text):
+                return ''
+    
+    def nextWord(self):
+        import string
+        self.whitespace = ''
+        if self.n >= len(self.text):
+            return ''
+        self.skipWhitespace()
+        word = self.getWord()
         n2 += 1
         self.n = n2
         return word
