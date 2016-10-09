@@ -15,9 +15,11 @@
 class AddWords:
     ''' Provides Built-in Words for the struixLang Interpreter. '''
     def __init__(self, terp, ENABLE_UNSAFE_OPERATIONS = False,
-                 wordSets = ['output', 'execution', 'math', 'stack',
+                 wordSets = None):
+        if wordSets is None:
+            wordSets = ['output', 'execution', 'math', 'stack',
                              'values', 'text', 'pythonOps', 'logic',
-                             'compiling', 'lists', 'control']):
+                             'compiling', 'lists', 'control']
         self.unsafeOps = ENABLE_UNSAFE_OPERATIONS
         for wordSet in wordSets:
             terp.addWords(eval('self.words4{}()'.format(wordSet)))
