@@ -12,8 +12,6 @@
 ##   See the License for the specific language governing permissions and
 ##   limitations under the License.
 
-import primitives
-
 class Lexer:
     ''' Lexer for struixLang. '''
     def __init__(self, text):
@@ -140,8 +138,3 @@ class Terp:
 
     def isCompiling(self):
         return self.stack is self.compileBuffer
-
-terp = Terp()
-primitives.AddWords(terp, terp.ENABLE_UNSAFE_OPERATIONS)
-while True:
-    terp.run(input('>>> '))
