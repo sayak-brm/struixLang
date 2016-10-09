@@ -16,8 +16,8 @@ class AddWords:
     ''' Provides Built-in Words for the struixLang Interpreter. '''
     def __init__(self, terp, ENABLE_UNSAFE_OPERATIONS = False,
                  wordSets = ['output', 'execution', 'math', 'stack',
-                             'values', 'text', 'pythonOps',
-                             'compiling', 'lists']):
+                             'values', 'text', 'pythonOps', 'logic',
+                             'compiling', 'lists', 'control']):
         self.unsafeOps = ENABLE_UNSAFE_OPERATIONS
         for wordSet in wordSets:
             terp.addWords(eval('self.words4{}()'.format(wordSet)))
@@ -47,7 +47,9 @@ class AddWords:
             print('\n'.join(str(val) for val in stackList))
         return {
             "PRINT":  PRINT,
-            "PSTACK": PSTACK
+            "PSTACK": PSTACK # ,
+#            ".":      PRINT,
+#            ".S":     PSTACK
             }
 
     @staticmethod
@@ -191,7 +193,9 @@ class AddWords:
             "VAR":   VAR,
             "CONST": CONST,
             "STORE": STORE,
-            "FETCH": FETCH
+            "FETCH": FETCH # ,
+#            "=":     STORE,
+#            "@":     FETCH
             }
     @staticmethod
     def words4text():
@@ -248,9 +252,9 @@ class AddWords:
         END.__dict__['immediate'] = True
         return {
             "DEF": DEF,
-            "END": END,
-            ":":   DEF,
-            ";":   END
+            "END": END # ,
+#            ":":   DEF,
+#            ";":   END
             }
 
     @staticmethod
@@ -294,6 +298,22 @@ class AddWords:
             "ITEM":   ITEM
             }
 
+    @staticmethod
+    def words4logic():
+        def NOT(terp):
+            if len(terp.stack) < 1:
+                raise IndexError('Not enough items on stack.')
+            terp.stack.append(not terp.stack.pop())
+        def TRUE(terp):
+            terp.stack.append(True)
+        def FALSE(terp):
+            terp.stack.append(False)
+        return {
+            "NOT":   NOT,
+            "TRUE":  TRUE,
+            "FALSE": FALSE
+            }
+
     def words4control(self):
         ''' Provides control structures. '''
         def RUN(terp):
@@ -310,7 +330,57 @@ class AddWords:
             word = self.makemakeWord(code)
             for _ in range(n):
                 word(terp)
+        def IFTRUE(terp):
+            if len(terp.stack) < 2:
+                raise IndexError('Not enough items on stack.')
+            code = terp.stack.pop()
+            if terp.stack.pop():
+                terp.interpret(self.makeWord(code))
+        def IFFALSE(terp):
+            if len(terp.stack) < 2:
+                raise IndexError('Not enough items on stack.')
+            code = terp.stack.pop()
+            if not terp.stack.pop():
+                terp.interpret(self.makeWord(code))
+        def IFELSE(terp):
+            if len(terp.stack) < 2:
+                raise IndexError('Not enough items on stack.')
+            code2 = terp.stack.pop()
+            code1 = terp.stack.pop()
+            if terp.stack.pop():
+                terp.interpret(self.makeWord(code1))
+            else:
+                terp.interpret(self.makeWord(code2))
+        def WHILE(terp):
+            if len(terp.stack) < 2:
+                raise IndexError('Not enough items on stack.')
+            code = self.makeWord(terp.stack.pop())
+            cond = self.makeWord(terp.stack.pop())
+            while True:
+                cond(terp)
+                if len(terp.stack) < 1:
+                    raise IndexError('Not enough items on stack.')
+                if not terp.stack.pop():
+                    break
+                code(terp)
+        def DOWHILE(terp):
+            if len(terp.stack) < 2:
+                raise IndexError('Not enough items on stack.')
+            code = self.makeWord(terp.stack.pop())
+            cond = self.makeWord(terp.stack.pop())
+            while True:
+                code(terp)
+                cond(terp)
+                if len(terp.stack) < 1:
+                    raise IndexError('Not enough items on stack.')
+                if not terp.stack.pop():
+                    break
         return {
-            "RUN":   RUN,
-            "TIMES": TIMES
+            "RUN":     RUN,
+            "TIMES":   TIMES,
+            "IFTRUE":  IFTRUE,
+            "IFFALSE": IFFALSE,
+            "IFELSE":  IFELSE,
+            "WHILE":   WHILE,
+            "DOWHILE": DOWHILE
             }

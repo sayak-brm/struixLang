@@ -40,20 +40,8 @@ class Lexer:
         return word
     
     def peekWord(self):
-        import string
-        n1 = self.n
-        if n1 >= len(self.text):
-            return ''
-        while self.text[n1] in string.whitespace:
-            n1 += 1
-            if n1 >= len(self.text):
-                return ''
-        n2 = n1
-        while self.text[n2] not in string.whitespace:
-            n2 += 1
-            if n2 >= len(self.text):
-                break
-        word = self.text[n1:n2]
+        word = self.nextWord()
+        self.rewind(len(word))
         return word
 
     def charsTill(self, end):
