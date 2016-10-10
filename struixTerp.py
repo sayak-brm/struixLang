@@ -147,7 +147,7 @@ class Terp:
             return num
         elif word[0] in ['\'', '\"']:
             self.lexer.rewind(len(word[1:]))
-            return self.lookup('STRING')(self, word[0])
+            return self.lexer.charsTill(word[0])
         else:
             raise ValueError('Unknown Word: {}'.format(word))
 

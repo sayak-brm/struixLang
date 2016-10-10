@@ -47,7 +47,7 @@ class AddWords:
             ''' Displays the complete stack. '''
             stackList = terp.stack
             stackList.reverse()
-            print('\n'.join(str(val) for val in stackList))
+            print('\n'.join(repr(val) for val in stackList))
         return {
             "PRINT":  PRINT,
             "PSTACK": PSTACK # ,
@@ -207,18 +207,13 @@ class AddWords:
             }
     @staticmethod
     def words4text():
-        ''' Adds words for handling of commentsand strings. '''
+        ''' Adds words for handling of comments. '''
         def COMMENT(terp):
             ''' Adds support for comments. '''
             terp.lexer.clear()
-        def STRING(terp, quote):
-            ''' Helps in creation of comments. '''
-            return terp.lexer.charsTill(quote)
-        STRING.__dict__['immediate'] = True
         COMMENT.__dict__['immediate'] = True
         return {
-            "#":       COMMENT,
-            "STRING":  STRING
+            "#": COMMENT
             }
 
     def words4pythonOps(self):
