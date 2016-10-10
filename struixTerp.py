@@ -15,19 +15,23 @@
 class Lexer:
     ''' Lexer for struixLang. '''
     def __init__(self, text):
+        ''' Initializes the Lexer. '''
         self.text=text
         self.n = 0
 
     def getWord(self):
+        ''' Returns the next word in the code. '''
         import string
-        n2 = self.n
-        while self.text[n2] not in string.whitespace:
-            n2 += 1
-            if n2 >= len(self.text): break
-        word = self.text[self.n:n2]
+        n1 = self.n
+        while self.text[self.n] not in string.whitespace:
+            self.n += 1
+            if self.n >= len(self.text): break
+        word = self.text[n1:self.n]
         return word
 
     def skipWhitespace(self):
+        ''' Skips all consecutive whitespaces from current position. '''
+        import string
         while self.text[self.n] in string.whitespace:
             self.whitespace += self.text[self.n]
             self.n += 1
@@ -35,22 +39,23 @@ class Lexer:
                 return ''
     
     def nextWord(self):
+        ''' Extracts and returns the next word. '''
         import string
         self.whitespace = ''
         if self.n >= len(self.text):
             return ''
         self.skipWhitespace()
         word = self.getWord()
-        n2 += 1
-        self.n = n2
         return word
     
     def peekWord(self):
+        ''' Extracts and returns the next word while not changing position. '''
         word = self.nextWord()
         self.rewind(len(word))
         return word
 
     def charsTill(self, end):
+        ''' Returns following characters till given character. '''
         if self.n >= len(self.text):
             return ''
         n2 = self.n
@@ -64,7 +69,7 @@ class Lexer:
         return chars
     
     def rewind(self, places):
-        self.n -= places + 1
+        self.n -= places
         
     def clear(self):
         self.n = len(self.text)
