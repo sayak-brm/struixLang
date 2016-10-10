@@ -69,9 +69,11 @@ class Lexer:
         return chars
     
     def rewind(self, places):
+        ''' Rewinds Lexer counter by given places. '''
         self.n -= places
         
     def clear(self):
+        ''' Clears the Lexer. '''
         self.n = len(self.text)
 
 class Terp:
@@ -88,18 +90,22 @@ class Terp:
         self.newWord = None
         
     def addWords(self, newWords):
+        ''' Adds given words to interpretor dictionary. '''
         self.dictionary.update(newWords)
 
     def define(self, word, code):
+        ''' Defines (or redefines) a word in the dictionary. '''
         self.dictionary[word.upper()] = code
 
     def lookup(self, word):
+        ''' Returns a word with given key from dictionary. '''
         if word.upper() in self.dictionary.keys():
             return self.dictionary[word.upper()]
         return None
 
     @staticmethod
     def parseNumber(string):
+        ''' Parses a string to either an integer or a float. '''
         try:
             num = int(string)
         except ValueError:
@@ -110,7 +116,7 @@ class Terp:
         return num
         
     def run(self, text):
-        ''' Executes struixLang code. '''
+        ''' Starts processing of struixLang code. '''
         self.lexer = Lexer(text)
         word = None
         while self.lexer.peekWord():
@@ -122,6 +128,7 @@ class Terp:
                 self.stack.append(word)
 
     def interpret(self, word):
+        ''' Executes struixLang code. '''
         import types
         if isinstance(word, types.FunctionType):
             word(self)
@@ -129,6 +136,7 @@ class Terp:
             self.stack.append(word)
 
     def compile(self, word):
+        ''' Compiles struixLang code to its internal representation. '''
         word = word.upper()
         num = self.parseNumber(word)
         fn = self.lookup(word)
@@ -144,10 +152,13 @@ class Terp:
             raise ValueError('Unknown Word: {}'.format(word))
 
     def startCompile(self):
+        ''' Discretely replaces the data stack with compile buffer. '''
         self.stack = self.compileBuffer
 
     def stopCompile(self):
+        ''' Discretely replaces the compile buffer with data stack. '''
         self.stack = self.dataStack
 
     def isCompiling(self):
+        ''' Checks if the interpretor is in compile mode. '''
         return self.stack is self.compileBuffer
