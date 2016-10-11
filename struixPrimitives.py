@@ -86,7 +86,7 @@ class AddWords:
                     raise IndexError('Not enough items on stack.')
                 n1 = terp.stack.pop()
                 n2 = terp.stack.pop()
-                terp.stack.append(eval(str(n1) + op + str(n2)))
+                terp.stack.append(eval(str(n1) + ' ' + op + ' ' + str(n2)))
             return CALC
         ops = ['+',  '-',  '*',  '**',
                '/',  '//', '%',  '@',
@@ -94,7 +94,7 @@ class AddWords:
                '^',  '~',  '<',  '>',
                '<=', '>=', '==', '!=',
                'in', 'is', 'or', 'and']
-        return dict(zip(ops, [CALCGEN(op) for op in ops]))
+        return dict(zip([op.upper() for op in ops], [CALCGEN(op) for op in ops]))
 
     @staticmethod
     def words4stack():
@@ -213,7 +213,8 @@ class AddWords:
             terp.lexer.clear()
         COMMENT.__dict__['immediate'] = True
         return {
-            "#": COMMENT
+            "#":       COMMENT,
+            "COMMENT": COMMENT
             }
 
     def words4pythonOps(self):
@@ -300,6 +301,7 @@ class AddWords:
         return {
             "[":      LIST,
             "LENGTH": LENGTH,
+            "LEN":    LENGTH,
             "ITEM":   ITEM
             }
 
