@@ -52,7 +52,11 @@ class AddWords:
             stackList.reverse()
             print('\n'.join(repr(val) for val in stackList))
         def INPUT(terp):
-            terp.stack.append(input())
+            val = input()
+            num = terp.parseNumber(val)
+            if num:
+                val = num
+            terp.stack.append(val)
         return {
             "PRINT":  PRINT,
             "PSTACK": PSTACK,
