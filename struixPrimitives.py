@@ -96,7 +96,7 @@ class AddWords:
                     raise IndexError('Not enough items on stack.')
                 n1 = terp.stack.pop()
                 n2 = terp.stack.pop()
-                terp.stack.append(eval(str(n1) + ' ' + op + ' ' + str(n2)))
+                terp.stack.append(eval(repr(n1) + ' ' + op + ' ' + repr(n2)))
             return CALC
         ops = ['+',  '-',  '*',  '**',
                '/',  '//', '%',  '@',
