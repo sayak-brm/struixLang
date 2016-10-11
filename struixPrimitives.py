@@ -17,9 +17,9 @@ class AddWords:
     def __init__(self, terp, ENABLE_UNSAFE_OPERATIONS = False, wordSets = None):
         ''' Collects the primitive words and ipdates the dicionary. '''
         if wordSets is None:
-            wordSets = ['output', 'execution', 'math', 'stack', 'values',
+            wordSets = ['lists',  'execution', 'math', 'stack', 'values',
                         'values', 'compiling', 'text', 'logic', 'control',
-                        'lists',  'pythonOps']
+                        'io',  'pythonOps']
         self.unsafeOps = ENABLE_UNSAFE_OPERATIONS
         for wordSet in wordSets:
             terp.addWords(eval('self.words4{}()'.format(wordSet)))
@@ -29,14 +29,17 @@ class AddWords:
         ''' Makes an executable word from list. '''
         def word(terp):
             ''' Template for a list executor. '''
-            pointer = 0
-            while pointer < len(code):
-                terp.interpret(code[pointer])
-                pointer += 1
+            if isinstance(code, list):
+                pointer = 0
+                while pointer < len(code):
+                    terp.interpret(code[pointer])
+                    pointer += 1
+            else:
+                raise TypeError('Expected List')
         return word
 
     @staticmethod
-    def words4output():
+    def words4io():
         ''' Provides Words for output operations. '''
         def PRINT(terp):
             ''' Pops & Displays the Top of Stack (ToS). '''
@@ -48,9 +51,12 @@ class AddWords:
             stackList = terp.stack
             stackList.reverse()
             print('\n'.join(repr(val) for val in stackList))
+        def INPUT(terp):
+            terp.stack.append(input())
         return {
             "PRINT":  PRINT,
-            "PSTACK": PSTACK # ,
+            "PSTACK": PSTACK,
+            "INPUT":  INPUT # ,
 #            ".":      PRINT,
 #            ".S":     PSTACK
             }
@@ -338,7 +344,7 @@ class AddWords:
                 raise IndexError('Not enough items on stack.')
             n = terp.stack.pop()
             code = terp.stack.pop()
-            word = self.makemakeWord(code)
+            word = self.makeWord(code)
             for _ in range(n):
                 word(terp)
         def IFTRUE(terp):
