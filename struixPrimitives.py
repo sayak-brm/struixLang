@@ -190,6 +190,8 @@ class AddWords:
             val = terp.lexer.nextWord()
             if name is '' or val is '':
                 raise SyntaxError('Invalid Syntax')
+            elif name in terp.dictionary:
+                raise SyntaxError('Constant value set')
             const = Constant(val)
             terp.define(name, const.access)
         def STORE(terp):
