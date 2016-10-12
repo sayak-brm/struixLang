@@ -12,6 +12,6 @@
 
 **struixLang** implements a **stack**, which is a list of objects which the program operates on.
 
-Also, a **dictionary** is present, containing **words** *(functions/subroutines)* which may be executed in a program.*
+Also, a **dictionary** is present, containing **words** *(functions/subroutines)* which may be executed in a program.
 
-Several primitive *(read:built-in)* words are pre-defined and mechanisms to define new *user-defined* words within struixLang itself are in place.
+Several primitive *(read: built-in)* words are pre-defined and mechanisms to define new *user-defined* words within struixLang itself are in place.
