@@ -162,7 +162,7 @@ class AddWords:
                 ''' Provides a template class for variables. '''
                 def __init__(self, val=None):
                     ''' Initializes a Variable object. '''
-                    self.value = val
+                    self.val = val
                 def access(self, terp):
                     ''' Puts a reference to the variable value on the stack. '''
                     terp.stack.append(self)
@@ -198,13 +198,13 @@ class AddWords:
                 raise IndexError('Not enough items on stack.')
             val = terp.stack.pop()
             ref = terp.stack.pop()
-            ref.value = val
+            ref.val = val
         def FETCH(terp):
             ''' Helps retrieviing values from variables. '''
             if len(terp.stack) < 1:
                 raise IndexError('Not enough items on stack.')
             ref = terp.stack.pop()
-            terp.stack.append(ref.value)
+            terp.stack.append(ref.val)
         CONST.__dict__['immediate'] = True
         VAR.__dict__['immediate'] = True
         return {
@@ -215,6 +215,7 @@ class AddWords:
 #            "=":     STORE,
 #            "@":     FETCH
             }
+    
     @staticmethod
     def words4text():
         ''' Adds words for handling of comments. '''
