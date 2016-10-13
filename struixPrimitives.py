@@ -352,8 +352,12 @@ class AddWords:
             n = terp.stack.pop()
             code = terp.stack.pop()
             word = self.makeWord(code)
-            for _ in range(n):
-                word(terp)
+            if n == float('inf'):
+                while True:
+                    word(terp)
+            else:
+                for _ in range(n):
+                    word(terp)
         def IFTRUE(terp):
             ''' Performs a task on recieving TRUE. '''
             if len(terp.stack) < 2:

@@ -143,7 +143,7 @@ class Terp:
         if fn:
             self.immediate = fn.__dict__.get('immediate', False)
             return fn
-        elif num:
+        elif isinstance(num, (int, float)):
             return num
         elif word[0] in ['\'', '\"']:
             self.lexer.rewind(len(word[1:]))
