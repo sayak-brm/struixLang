@@ -156,6 +156,18 @@ class AddWords:
     @staticmethod
     def words4values():
         ''' Provides support for variables and constants. '''
+        def getVal(terp, val):
+            ''' Parses and gets next value from lexer. '''
+            import types
+            val = terp.compile(val, 'Invalid Value: {}')
+            if isinstance(val, (types.FunctionType, types.MethodType)):
+                terp.stack.append(val)
+                terp.dictionary['RUN'](terp)
+                if len(terp.stack) < 1:
+                    raise IndexError('Not enough items on stack.')
+                val = terp.stack.pop()
+            return val
+        
         def VAR(terp):
             ''' Provides creation of variables. '''
             class Variable:
@@ -186,8 +198,9 @@ class AddWords:
                 def access(self, terp):
                     ''' Puts the value of the constant on the stack. '''
                     terp.stack.append(self.val)
+            import types
             name = terp.lexer.nextWord()
-            val = terp.compile(terp.lexer.nextWord(), 'Invalid Value: {}')
+            val = getVal(terp, terp.lexer.nextWord())
             if name is '' or val is '':
                 raise SyntaxError('Invalid Syntax')
             elif name in terp.dictionary:
@@ -196,9 +209,10 @@ class AddWords:
             terp.define(name, const.access)
         def STORE(terp):
             ''' Helps storing values to variables. '''
+            import types
             if len(terp.stack) < 2:
                 raise IndexError('Not enough items on stack.')
-            val = terp.compile(terp.lexer.nextWord(), 'Invalid Value: {}')
+            val = getVal(terp, terp.stack.pop())
             ref = terp.stack.pop()
             ref.val = val
         def FETCH(terp):
@@ -342,9 +356,14 @@ class AddWords:
         ''' Provides control structures. '''
         def RUN(terp):
             ''' Provides execution of lists containing struixLang code. '''
-            if len(terp.stack) < 1:
-                raise IndexError('Not enough items on stack.')
-            terp.interpret(self.makeWord(terp.stack.pop()))
+            import types
+            code = terp.stack.pop()
+            if isinstance(code, (types.FunctionType, types.MethodType)):
+                code(terp)
+            if isinstance(code, list):
+                if len(terp.stack) < 1:
+                    raise IndexError('Not enough items on stack.')
+                terp.interpret(self.makeWord(code))
         def TIMES(terp):
             ''' Iterating structure like for-loop. '''
             if len(terp.stack) < 2:

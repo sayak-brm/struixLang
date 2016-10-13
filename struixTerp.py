@@ -99,7 +99,7 @@ class Terp:
 
     def lookup(self, word):
         ''' Returns a word with given key from dictionary. '''
-        if word.upper() in self.dictionary.keys():
+        if isinstance(word, str) and word.upper() in self.dictionary.keys():
             return self.dictionary[word.upper()]
         return None
 
@@ -137,9 +137,10 @@ class Terp:
 
     def compile(self, word, errMsg = 'Unknown Word: {}'):
         ''' Compiles struixLang code to its internal representation. '''
-        word = word.upper()
-        num = self.parseNumber(word)
-        fn = self.lookup(word)
+        import types
+        word = word.upper() if isinstance(word, str) else word
+        num = self.parseNumber(word) if not isinstance(word, (types.FunctionType, types.MethodType)) else None
+        fn = word if isinstance(word, (types.FunctionType, types.MethodType)) else self.lookup(word)
         if fn:
             self.immediate = fn.__dict__.get('immediate', False)
             return fn
