@@ -130,7 +130,7 @@ class Terp:
     def interpret(self, word):
         ''' Executes struixLang code. '''
         import types
-        if isinstance(word, types.FunctionType) or isinstance(word, types.MethodType):
+        if isinstance(word, (types.FunctionType, types.MethodType)):
             word(self)
         else:
             self.stack.append(word)
