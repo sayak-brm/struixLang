@@ -48,7 +48,7 @@ class AddWords:
             print(terp.stack.pop())
         def PSTACK(terp):
             ''' Displays the complete stack. '''
-            stackList = terp.stack
+            stackList = terp.stack[:]
             stackList.reverse()
             print('\n'.join(repr(val) for val in stackList))
         def INPUT(terp):
