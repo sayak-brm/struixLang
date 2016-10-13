@@ -135,7 +135,7 @@ class Terp:
         else:
             self.stack.append(word)
 
-    def compile(self, word):
+    def compile(self, word, errMsg = 'Unknown Word: {}'):
         ''' Compiles struixLang code to its internal representation. '''
         word = word.upper()
         num = self.parseNumber(word)
@@ -149,7 +149,7 @@ class Terp:
             self.lexer.rewind(len(word[1:]))
             return self.lexer.charsTill(word[0])
         else:
-            raise ValueError('Unknown Word: {}'.format(word))
+            raise ValueError(errMsg.format(word))
 
     def startCompile(self):
         ''' Discretely replaces the data stack with compile buffer. '''

@@ -187,7 +187,7 @@ class AddWords:
                     ''' Puts the value of the constant on the stack. '''
                     terp.stack.append(self.val)
             name = terp.lexer.nextWord()
-            val = terp.lexer.nextWord()
+            val = terp.compile(terp.lexer.nextWord(), 'Invalid Value: {}')
             if name is '' or val is '':
                 raise SyntaxError('Invalid Syntax')
             elif name in terp.dictionary:
@@ -198,7 +198,7 @@ class AddWords:
             ''' Helps storing values to variables. '''
             if len(terp.stack) < 2:
                 raise IndexError('Not enough items on stack.')
-            val = terp.stack.pop()
+            val = terp.compile(terp.lexer.nextWord(), 'Invalid Value: {}')
             ref = terp.stack.pop()
             ref.val = val
         def FETCH(terp):
