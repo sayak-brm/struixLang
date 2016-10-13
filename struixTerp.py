@@ -23,20 +23,17 @@ class Lexer:
         ''' Returns the next word in the code. '''
         import string
         n1 = self.n
-        while self.text[self.n] not in string.whitespace:
+        while self.n < len(self.text) and self.text[self.n] not in string.whitespace:
             self.n += 1
-            if self.n >= len(self.text): break
         word = self.text[n1:self.n]
         return word
 
     def skipWhitespace(self):
         ''' Skips all consecutive whitespaces from current position. '''
         import string
-        while self.text[self.n] in string.whitespace:
+        while self.n < len(self.text) and self.text[self.n] in string.whitespace:
             self.whitespace += self.text[self.n]
             self.n += 1
-            if self.n >= len(self.text):
-                return ''
     
     def nextWord(self):
         ''' Extracts and returns the next word. '''
@@ -75,6 +72,10 @@ class Lexer:
     def clear(self):
         ''' Clears the Lexer. '''
         self.n = len(self.text)
+
+    def clearLine(self):
+        ''' Clears the Lexer. '''
+        self.charsTill('\n')
 
 class Terp:
     ''' Interpreter for struixLang. '''

@@ -237,7 +237,7 @@ class AddWords:
         ''' Adds words for handling of comments. '''
         def COMMENT(terp):
             ''' Adds support for comments. '''
-            terp.lexer.clear()
+            terp.lexer.clearLine()
         COMMENT.__dict__['immediate'] = True
         return {
             "#":       COMMENT,

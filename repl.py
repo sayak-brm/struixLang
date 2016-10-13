@@ -17,5 +17,12 @@ import struixPrimitives
 
 terp = struixTerp.Terp()
 struixPrimitives.AddWords(terp, terp.ENABLE_UNSAFE_OPERATIONS)
+##cmd=""""Enter 2 Numbers:" print
+##[ input ] 2 times
+##+
+##print
+##"""
+##print('>>> ' + cmd)
+##terp.run(cmd)
 while True:
     terp.run(input('>>> '))
