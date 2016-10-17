@@ -12,17 +12,24 @@
 ##   See the License for the specific language governing permissions and
 ##   limitations under the License.
 
+import code
+import sys
+
 import struixTerp
 import struixPrimitives
 
+sys.ps1 = "sxL> "
+sys.ps2 = ">>>> "
+banner = "struixLang REPL v1.0.20161017a.\nPress Ctrl-D to quit."
+
+class Shell(code.InteractiveConsole):
+    def runsource(self, source, filename="<stdin>"):
+        try:
+            terp.run(source)
+        except:
+            self.showsyntaxerror(filename)
+        return False
+
 terp = struixTerp.Terp()
 struixPrimitives.AddWords(terp, terp.ENABLE_UNSAFE_OPERATIONS)
-##cmd=""""Enter 2 Numbers:" print
-##[ input ] 2 times
-##+
-##print
-##"""
-##print('>>> ' + cmd)
-##terp.run(cmd)
-while True:
-    terp.run(input('>>> '))
+Shell().interact(banner)
