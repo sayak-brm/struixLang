@@ -1,4 +1,4 @@
-<img src="https://github.com/sayak-brm/struixLang/blob/master/logo/struixLANG.PNG?raw=true" alt="struixLang" height="60"/>
+<img src="https://github.com/sayak-brm/struixLang/blob/gh-pages/logo/struixLANG.PNG?raw=true" alt="struixLang" height="60"/>
 
 ##### A stack-based programming language implemented in Python3.
 
@@ -18,19 +18,4 @@ Several primitive *(read:built-in)* words are pre-defined and mechanisms to defi
 
 ----
 
-## Data Model:
-
-### Supported Types:
-
-struixLang supports the following data types:
-
-* Integers,
-* Floats,
-* Strings,
-* Boolean,
-* Lists, and
-* Words.
-
-However, the current implementation can utilize words which put or use values of any type supported in Python 3.
-
-Also note that as struixLang is a *Homoiconic Language*, it can treat code as data and data as code, hence **words** are included in the list above.
+For more information see [here](https://sayak-brm.github.io/struixLang/).
