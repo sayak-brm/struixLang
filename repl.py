@@ -23,6 +23,7 @@ sys.ps2 = ">>>> "
 banner = "struixLang REPL v1.0.20161017a.\nPress Ctrl-D to quit."
 
 class Shell(code.InteractiveConsole):
+    ''' Provides a REPL for struixLang. '''
     def runsource(self, source, filename="<stdin>"):
         try:
             terp.run(source)
