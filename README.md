@@ -18,4 +18,4 @@ Several primitive *(read:built-in)* words are pre-defined and mechanisms to defi
 
 ----
 
-For more information see [here](https://sayak-brm.github.io/struixLang/).
+For more information see [here](https://sayak-brm.github.io/struixLang/docs/).
