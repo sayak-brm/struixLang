@@ -166,7 +166,6 @@ class AddWords:
                     raise IndexError('Not enough items on stack.')
                 val = terp.stack.pop()
             return val
-        
         def VAR(terp):
             ''' Provides creation of variables. '''
             class Variable:

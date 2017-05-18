@@ -21,11 +21,10 @@ class Terp:
     
     def __init__(self):
         self.dictionary = {}
-        self.dataStack = []
-        self.compileBuffer = []
-        self.stack = self.dataStack
         self.immediate = False
         self.newWord = None
+        self.compileStack = [[]]
+        self.stack = self.compileStack[0]
         
     def addWords(self, newWords):
         ''' Adds given words to interpretor dictionary. '''
@@ -59,7 +58,7 @@ class Terp:
         word = None
         while self.lexer.peekWord():
             word = self.compile(self.lexer.nextWord())
-            if self.immediate or not self.isCompiling():
+            if not self.isCompiling() or self.immediate:
                 self.interpret(word)
                 self.immediate = False
             else:
@@ -92,12 +91,17 @@ class Terp:
 
     def startCompile(self):
         ''' Discretely replaces the data stack with compile buffer. '''
-        self.stack = self.compileBuffer
+        self.compileStack.append([])
+        self.stack = self.compileStack[len(self.compileStack)-1]
 
     def stopCompile(self):
         ''' Discretely replaces the compile buffer with data stack. '''
-        self.stack = self.dataStack
+        if len(self.compileStack) > 1:
+            dataStack = self.compileStack.pop()
+            self.stack = self.compileStack[len(self.compileStack)-1]
+            return dataStack
+        return self.compileStack[0]
 
     def isCompiling(self):
         ''' Checks if the interpretor is in compile mode. '''
-        return self.stack is self.compileBuffer
+        return True if len(self.compileStack) > 1 else False
