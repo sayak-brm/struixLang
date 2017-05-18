@@ -357,12 +357,12 @@ class AddWords:
         def RUN(terp):
             ''' Provides execution of lists containing struixLang code. '''
             import types
+            if len(terp.stack) < 1:
+                raise IndexError('Not enough items on stack.')
             code = terp.stack.pop()
             if isinstance(code, (types.FunctionType, types.MethodType)):
                 code(terp)
             if isinstance(code, list):
-                if len(terp.stack) < 1:
-                    raise IndexError('Not enough items on stack.')
                 terp.interpret(self.makeWord(code))
         def TIMES(terp):
             ''' Iterating structure like for-loop. '''
