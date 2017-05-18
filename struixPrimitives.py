@@ -161,8 +161,7 @@ class AddWords:
             import types
             val = terp.compile(val, 'Invalid Value: {}')
             if isinstance(val, (types.FunctionType, types.MethodType)):
-                terp.stack.append(val)
-                terp.dictionary['RUN'](terp)
+                val(terp)
                 if len(terp.stack) < 1:
                     raise IndexError('Not enough items on stack.')
                 val = terp.stack.pop()
@@ -210,11 +209,19 @@ class AddWords:
         def STORE(terp):
             ''' Helps storing values to variables. '''
             import types
-            if len(terp.stack) < 2:
-                raise IndexError('Not enough items on stack.')
-            val = getVal(terp, terp.stack.pop())
-            ref = terp.stack.pop()
-            ref.val = val
+            nxt = terp.lexer.nextWord()
+            if nxt is '':
+                raise SyntaxError('Invalid Syntax')
+            val = getVal(terp, nxt)
+            def helper(terp):
+                if len(terp.stack) < 1:
+                    raise IndexError('Not enough items on stack.')
+                ref = terp.stack.pop()
+                ref.val = val
+            if not terp.isCompiling():
+                helper(terp)
+            else:
+                terp.stack.append(helper)
         def FETCH(terp):
             ''' Helps retrieviing values from variables. '''
             if len(terp.stack) < 1:
@@ -223,12 +230,12 @@ class AddWords:
             terp.stack.append(ref.val)
         CONST.__dict__['immediate'] = True
         VAR.__dict__['immediate'] = True
+        STORE.__dict__['immediate'] = True
         return {
             "VAR":   VAR,
             "CONST": CONST,
-            "STORE": STORE,
-            "FETCH": FETCH # ,
-#            "=":     STORE,
+            "FETCH": FETCH,
+            "=":     STORE #,
 #            "@":     FETCH
             }
     
@@ -240,8 +247,7 @@ class AddWords:
             terp.lexer.clearLine()
         COMMENT.__dict__['immediate'] = True
         return {
-            "#":       COMMENT,
-            "COMMENT": COMMENT
+            "#":       COMMENT
             }
 
     def words4pythonOps(self):
@@ -296,8 +302,7 @@ class AddWords:
             ''' Creates a list. '''
             import types
             lst = []
-            dataStack = terp.stack
-            terp.stack = lst
+            terp.startCompile()
             while True:
                 nextWord = terp.lexer.nextWord()
                 if nextWord == '':
@@ -311,8 +316,10 @@ class AddWords:
                     nextWord(terp)
                 else:
                     terp.stack.append(nextWord)
-            terp.stack = dataStack
+            lst = terp.stack[:]
+            terp.stack = []
             terp.stack.append(lst)
+            terp.stopCompile()
         def LENGTH(terp):
             ''' Gives the length of a list. '''
             if len(terp.stack) < 1:
@@ -328,7 +335,6 @@ class AddWords:
         return {
             "[":      LIST,
             "LENGTH": LENGTH,
-            "LEN":    LENGTH,
             "ITEM":   ITEM
             }
 
