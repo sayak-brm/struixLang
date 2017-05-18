@@ -317,8 +317,8 @@ class AddWords:
                     terp.stack.append(nextWord)
             lst = terp.stack[:]
             terp.stack = []
-            terp.stack.append(lst)
             terp.stopCompile()
+            terp.stack.append(lst)
         def LENGTH(terp):
             ''' Gives the length of a list. '''
             if len(terp.stack) < 1:
