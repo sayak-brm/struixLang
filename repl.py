@@ -26,9 +26,12 @@ class Shell(code.InteractiveConsole):
     ''' Provides a REPL for struixLang. '''
     def runsource(self, source, filename="<stdin>"):
         try:
-            terp.run(source.splitlines()[-1])
+            if '\n' in source:
+                terp.run(source.splitlines()[-1])
+            else: terp.run(source)
         except:
-            self.showsyntaxerror(filename)
+#            self.showsyntaxerror(filename)
+            self.showtraceback()
         if terp.isCompiling(): return True
         return False
 
