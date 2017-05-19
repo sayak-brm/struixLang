@@ -246,7 +246,7 @@ class AddWords:
             terp.stack.append(ref.val)
         CONST.__dict__['immediate'] = True
         VAR.__dict__['immediate'] = True
-        STORE.__dict__['immediate'] = True
+        ASSIGN.__dict__['immediate'] = True
         return {
             "VAR":   VAR,
             "CONST": CONST,
