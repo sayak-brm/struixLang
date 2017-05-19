@@ -213,8 +213,8 @@ class AddWords:
                 raise SyntaxError('Constant value set')
             const = Constant(val)
             terp.define(name, const.access)
-        def STORE(terp):
-            ''' Helps storing values to variables. '''
+        def ASSIGN(terp):
+            ''' Helps storing values to variables. (INFIX) '''
             import types
             nxt = terp.lexer.nextWord()
             if nxt is '':
@@ -230,6 +230,14 @@ class AddWords:
                 helper(terp)
             else:
                 terp.stack.append(helper)
+        def STORE(terp):
+            ''' Helps storing values to variables. (POSTFIX) '''
+            import types
+            if len(terp.stack) < 2:
+                raise IndexError('Not enough items on stack.')
+            val = terp.stack.pop()
+            ref = terp.stack.pop()
+            ref.val = val
         def FETCH(terp):
             ''' Helps retrieviing values from variables. '''
             if len(terp.stack) < 1:
@@ -243,7 +251,8 @@ class AddWords:
             "VAR":   VAR,
             "CONST": CONST,
             "FETCH": FETCH,
-            "=":     STORE #,
+            "=":     ASSIGN,
+            "STORE": STORE #,
 #            "@":     FETCH
             }
     
