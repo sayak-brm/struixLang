@@ -26,10 +26,9 @@ class AddWords:
             lib.close()
         terp.addWords({'IMPORT': IMPORT})
         self.unsafeOps = ENABLE_UNSAFE_OPERATIONS
-        self.importWordSets(terp, wordsets)
+        self.importWordSets(terp, wordSets)
 
-    @staticmethod
-    def importWordSets(terp, wordsets):
+    def importWordSets(self, terp, wordSets):
         if wordSets is None:
             wordSets = ['lists',  'execution', 'math', 'stack', 'values',
                         'values', 'functions', 'text', 'logic', 'control',
@@ -294,6 +293,12 @@ class AddWords:
             if not self.unsafeOps:
                 raise PermissionError('Unsafe Operations are disabled.')
             terp.stack.append(eval(terp.stack.pop()))
+        def PYIMPORT(terp):
+            ''' Evaluates value of Python code. '''
+            if not self.unsafeOps:
+                raise PermissionError('Unsafe Operations are disabled.')
+            module = terp.stack.pop()
+            exec('global {m}\nimport {m}'.format(m=module)
         def PYLITEVAL(terp):
             ''' Evaluates value of Python expressions. '''
             terp.stack.append(__import__('ast').literal_eval(terp.stack.pop()))
