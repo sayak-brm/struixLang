@@ -1,4 +1,4 @@
-##   Copyright 2016 Sayak Brahmachari
+##   Copyright 2016-17 Sayak Brahmachari
 ##
 ##   Licensed under the Apache License, Version 2.0 (the "License");
 ##   you may not use this file except in compliance with the License.
@@ -15,12 +15,25 @@
 class AddWords:
     ''' Provides Built-in Words for the struixLang Interpreter. '''
     def __init__(self, terp, ENABLE_UNSAFE_OPERATIONS = False, wordSets = None):
-        ''' Collects the primitive words and ipdates the dicionary. '''
+        ''' Collects the primitive words and updates the dicionary. '''
+        def IMPORT(terp):
+            name = terp.lexer.nextWord()
+            if name is '':
+                raise SyntaxError('Invalid Syntax')
+            try: lib = open('./lib/{}.sxLib'.format(name), 'r')
+            except: raise ImportError('No library named {}.'.format(name))
+            terp.run(lib.read())
+            lib.close()
+        terp.addWords({'IMPORT': IMPORT})
+        self.unsafeOps = ENABLE_UNSAFE_OPERATIONS
+        self.importWordSets(terp, wordsets)
+
+    @staticmethod
+    def importWordSets(terp, wordsets):
         if wordSets is None:
             wordSets = ['lists',  'execution', 'math', 'stack', 'values',
                         'values', 'functions', 'text', 'logic', 'control',
                         'io',  'pythonOps']
-        self.unsafeOps = ENABLE_UNSAFE_OPERATIONS
         for wordSet in wordSets:
             terp.addWords(eval('self.words4{}()'.format(wordSet)))
 
@@ -44,6 +57,7 @@ class AddWords:
         import types
         val = terp.compile(val)
         if isinstance(val, (types.FunctionType, types.MethodType)):
+            ''' Evaluates before accepting. '''
             val(terp)
             while len(terp.compileStack) > lvl:
                 word = terp.lexer.nextWord()
@@ -69,6 +83,7 @@ class AddWords:
             stackList.reverse()
             print('\n'.join(repr(val) for val in stackList))
         def INPUT(terp):
+            ''' Accepts value from user. '''
             val = input()
             num = terp.parseNumber(val)
             if num:
@@ -331,6 +346,7 @@ class AddWords:
             ''' Creates a list. '''
             terp.startCompile()
         def LIST_END(terp):
+            ''' Marks end of list. '''
             lst = []
             lst += terp.stopCompile()
             terp.stack.append(lst)
