@@ -283,6 +283,10 @@ class AddWords:
 
     def words4pythonOps(self):
         ''' Provides interfaces to the Python backend. '''
+        def REQUESTUNSAFE(terp):
+            if not self.unsafeOps:
+                ans = input("Enter Y to allow potentially unsafe operations:")
+                self.unsafeOps = True if ans.upper() == 'Y' else False
         def PYEXEC(terp):
             ''' Executes Python code. '''
             if not self.unsafeOps:
@@ -298,14 +302,16 @@ class AddWords:
             if not self.unsafeOps:
                 raise PermissionError('Unsafe Operations are disabled.')
             module = terp.stack.pop()
-            exec('global {m}\nimport {m}'.format(m=module)
+            exec('global {m}\nimport {m}'.format(m=module))
         def PYLITEVAL(terp):
             ''' Evaluates value of Python expressions. '''
             terp.stack.append(__import__('ast').literal_eval(terp.stack.pop()))
         return {
-            "PYEVAL":    PYEVAL,
-            "PYEXEC":    PYEXEC,
-            "PYLITEVAL": PYLITEVAL
+            "PYEVAL":        PYEVAL,
+            "PYEXEC":        PYEXEC,
+            "PYLITEVAL":     PYLITEVAL,
+            "PYIMPORT":      PYIMPORT,
+            "REQUESTUNSAFE": REQUESTUNSAFE
             }
     
     def words4functions(self):

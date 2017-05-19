@@ -33,5 +33,5 @@ class Shell(code.InteractiveConsole):
         return False
 
 terp = struixTerp.Terp()
-struixPrimitives.AddWords(terp, terp.ENABLE_UNSAFE_OPERATIONS)
+struixPrimitives.AddWords(terp)
 Shell().interact(banner)
