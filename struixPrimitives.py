@@ -281,10 +281,10 @@ class AddWords:
             terp.startCompile()
         def END(terp):
             ''' Marks end of user-defined words. '''
-            code = terp.stack[:]
-            terp.stack = []
+            code = terp.stopCompile()
             terp.define(terp.newWord, self.makeWord(code))
-            terp.stopCompile()
+            terp.newWord = None
+            
         DEF.__dict__['immediate'] = True
         END.__dict__['immediate'] = True
         return {
@@ -299,25 +299,10 @@ class AddWords:
         ''' Words for list management. '''
         def LIST(terp):
             ''' Creates a list. '''
-            import types
-            lst = []
             terp.startCompile()
-            while True:
-                nextWord = terp.lexer.nextWord()
-                if nextWord == '':
-                    terp.stack = dataStack
-                    raise SyntaxError('Invalid Syntax')
-                elif nextWord == ']':
-                    break
-                nextWord = terp.compile(nextWord)
-                if isinstance(nextWord, types.FunctionType)\
-                   and nextWord.__dict__.get('immediate', False):
-                    nextWord(terp)
-                else:
-                    terp.stack.append(nextWord)
-            lst = terp.stack[:]
-            terp.stack = []
-            terp.stopCompile()
+        def LIST_END(terp):
+            lst = []
+            lst += terp.stopCompile()
             terp.stack.append(lst)
         def LENGTH(terp):
             ''' Gives the length of a list. '''
@@ -331,8 +316,10 @@ class AddWords:
             key = terp.stack.pop()
             terp.stack.append(terp.stack.pop()[key])
         LIST.__dict__['immediate'] = True
+        LIST_END.__dict__['immediate'] = True
         return {
             "[":      LIST,
+            "]":      LIST_END,
             "LENGTH": LENGTH,
             "ITEM":   ITEM
             }
