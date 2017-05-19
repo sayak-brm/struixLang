@@ -18,7 +18,7 @@ class AddWords:
         ''' Collects the primitive words and ipdates the dicionary. '''
         if wordSets is None:
             wordSets = ['lists',  'execution', 'math', 'stack', 'values',
-                        'values', 'compiling', 'text', 'logic', 'control',
+                        'values', 'functions', 'text', 'logic', 'control',
                         'io',  'pythonOps']
         self.unsafeOps = ENABLE_UNSAFE_OPERATIONS
         for wordSet in wordSets:
@@ -38,6 +38,23 @@ class AddWords:
                 raise TypeError('Expected List')
         return word
 
+    @staticmethod
+    def getVal(terp, val, lvl):
+        ''' Parses and gets next value from lexer. '''
+        import types
+        val = terp.compile(val)
+        if isinstance(val, (types.FunctionType, types.MethodType)):
+            val(terp)
+            while len(terp.compileStack) > lvl:
+                word = terp.lexer.nextWord()
+                terp.interpret(terp.compile(word))
+            if len(terp.stack) < 1:
+                while len(terp.compileStack) > lvl:
+                    terp.compileStack.pop()
+                raise SyntaxError('Invalid Syntax.')
+            val = terp.stack.pop()
+        return val
+    
     @staticmethod
     def words4io():
         ''' Provides Words for output operations. '''
@@ -153,34 +170,9 @@ class AddWords:
             "OVER": OVER,
             "ROT":  ROT
             }
-    @staticmethod
-    def words4values():
+    
+    def words4values(self):
         ''' Provides support for variables and constants. '''
-        def getVal(terp, val, lvl):
-            ''' Parses and gets next value from lexer. '''
-            import types
-            val = terp.compile(val)
-            if isinstance(val, (types.FunctionType, types.MethodType)):
-                val(terp)
-                while len(terp.compileStack) > lvl:
-                    word = terp.lexer.nextWord()
-                    terp.interpret(terp.compile(word))
-                if len(terp.stack) < 1:
-                    while len(terp.compileStack) > lvl:
-                        terp.compileStack.pop()
-                    raise SyntaxError('Invalid Syntax.')
-                val = terp.stack.pop()
-            return val
-        def getVal_old(terp, val):
-            ''' Parses and gets next value from lexer. '''
-            import types
-            val = terp.compile(val, 'Invalid Value: {}')
-            if isinstance(val, (types.FunctionType, types.MethodType)):
-                val(terp)
-                if len(terp.stack) < 1:
-                    raise IndexError('Not enough items on stack.')
-                val = terp.stack.pop()
-            return val
         def VAR(terp):
             ''' Provides creation of variables. '''
             class Variable:
@@ -214,7 +206,7 @@ class AddWords:
             import types
             name = terp.lexer.nextWord()
             lvl = len(terp.compileStack)
-            val = getVal(terp, terp.lexer.nextWord(), lvl)
+            val = self.getVal(terp, terp.lexer.nextWord(), lvl)
             if name is '' or val is '':
                 raise SyntaxError('Invalid Syntax')
             elif name in terp.dictionary:
@@ -228,11 +220,12 @@ class AddWords:
             if nxt is '':
                 raise SyntaxError('Invalid Syntax')
             lvl = len(terp.compileStack)
+            val = self.getVal(terp, nxt, lvl)
             def helper(terp):
                 if len(terp.stack) < 1:
                     raise IndexError('Not enough items on stack.')
                 ref = terp.stack.pop()
-                ref.val = getVal(terp, nxt, lvl)
+                ref.val = val
             if not terp.isCompiling():
                 helper(terp)
             else:
@@ -286,7 +279,7 @@ class AddWords:
             "PYLITEVAL": PYLITEVAL
             }
     
-    def words4compiling(self):
+    def words4functions(self):
         ''' Supports creation of user-defined words. '''
         def DEF(terp):
             ''' Marks beginning of user-defined words. '''
@@ -300,7 +293,6 @@ class AddWords:
             code = terp.stopCompile()
             terp.define(terp.newWord, self.makeWord(code))
             terp.newWord = None
-            
         DEF.__dict__['immediate'] = True
         END.__dict__['immediate'] = True
         return {
@@ -435,6 +427,13 @@ class AddWords:
                     raise IndexError('Not enough items on stack.')
                 if not terp.stack.pop():
                     break
+        def NEXT(terp):
+            ''' Appends next word to stack and skips it during execution. '''
+            lvl = len(terp.compileStack)
+            nxt = terp.lexer.nextWord()
+            def helper(terp):
+                terp.stack.append(nxt)
+        NEXT.__dict__['immediate'] = True
         return {
             "RUN":     RUN,
             "TIMES":   TIMES,
@@ -442,5 +441,6 @@ class AddWords:
             "IFFALSE": IFFALSE,
             "IFELSE":  IFELSE,
             "WHILE":   WHILE,
-            "DOWHILE": DOWHILE
+            "DOWHILE": DOWHILE,
+            "NEXT":    NEXT
             }
