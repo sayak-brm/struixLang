@@ -58,13 +58,21 @@ class Terp:
         word = None
         while self.lexer.peekWord():
             word = self.compile(self.lexer.nextWord())
-            if not self.isCompiling() or self.immediate:
-                self.interpret(word)
-                self.immediate = False
-            else:
-                self.stack.append(word)
+            self.interpret(word)
 
     def interpret(self, word):
+        ''' Executes struixLang code. '''
+        import types
+        if not self.isCompiling() or self.immediate:
+            if isinstance(word, (types.FunctionType, types.MethodType)):
+                word(self)
+            else:
+                self.stack.append(word)
+            self.immediate = False
+        else:
+            self.stack.append(word)
+            
+    def interpret_old(self, word):
         ''' Executes struixLang code. '''
         import types
         if isinstance(word, (types.FunctionType, types.MethodType)):
