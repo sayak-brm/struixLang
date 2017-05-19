@@ -156,7 +156,21 @@ class AddWords:
     @staticmethod
     def words4values():
         ''' Provides support for variables and constants. '''
-        def getVal(terp, val):
+        def getVal(terp, val, lvl):
+            ''' Parses and gets next value from lexer. '''
+            import types
+            val = terp.compile(val)
+            if isinstance(val, (types.FunctionType, types.MethodType)):
+                val(terp)
+                while len(terp.compileStack) != lvl:
+                    word = terp.lexer.nextWord()
+                    terp.interpret(terp.compile(word))
+                val = terp.compile(val, 'Invalid Value: {}')
+                if len(terp.stack) < 1:
+                    raise IndexError('Not enough items on stack.')
+                val = terp.stack.pop()
+            return val
+        def getVal_old(terp, val):
             ''' Parses and gets next value from lexer. '''
             import types
             val = terp.compile(val, 'Invalid Value: {}')
@@ -198,7 +212,8 @@ class AddWords:
                     terp.stack.append(self.val)
             import types
             name = terp.lexer.nextWord()
-            val = getVal(terp, terp.lexer.nextWord())
+            lvl = len(terp.compileStack)
+            val = getVal(terp, terp.lexer.nextWord(), lvl)
             if name is '' or val is '':
                 raise SyntaxError('Invalid Syntax')
             elif name in terp.dictionary:
@@ -211,12 +226,12 @@ class AddWords:
             nxt = terp.lexer.nextWord()
             if nxt is '':
                 raise SyntaxError('Invalid Syntax')
-            val = getVal(terp, nxt)
+            lvl = len(terp.compileStack)
             def helper(terp):
                 if len(terp.stack) < 1:
                     raise IndexError('Not enough items on stack.')
                 ref = terp.stack.pop()
-                ref.val = val
+                ref.val = getVal(terp, nxt, lvl)
             if not terp.isCompiling():
                 helper(terp)
             else:
