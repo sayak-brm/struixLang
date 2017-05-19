@@ -162,12 +162,13 @@ class AddWords:
             val = terp.compile(val)
             if isinstance(val, (types.FunctionType, types.MethodType)):
                 val(terp)
-                while len(terp.compileStack) != lvl:
+                while len(terp.compileStack) > lvl:
                     word = terp.lexer.nextWord()
                     terp.interpret(terp.compile(word))
-                val = terp.compile(val, 'Invalid Value: {}')
                 if len(terp.stack) < 1:
-                    raise IndexError('Not enough items on stack.')
+                    while len(terp.compileStack) > lvl:
+                        terp.compileStack.pop()
+                    raise SyntaxError('Invalid Syntax.')
                 val = terp.stack.pop()
             return val
         def getVal_old(terp, val):
