@@ -92,13 +92,13 @@ class Terp:
     def startCompile(self):
         ''' Discretely replaces the data stack with compile buffer. '''
         self.compileStack.append([])
-        self.stack = self.compileStack[len(self.compileStack)-1]
+        self.stack = self.compileStack[-1]
 
     def stopCompile(self):
         ''' Discretely replaces the compile buffer with data stack. '''
         if len(self.compileStack) > 1:
             dataStack = self.compileStack.pop()
-            self.stack = self.compileStack[len(self.compileStack)-1]
+            self.stack = self.compileStack[-1]
             return dataStack
         return self.compileStack[0]
 
