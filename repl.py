@@ -19,16 +19,17 @@ import struixTerp
 import struixPrimitives
 
 sys.ps1 = "sxL> "
-sys.ps2 = ">>>> "
-banner = "struixLang REPL v1.0.20170518b.\nPress Ctrl+C to quit."
+sys.ps2 = "    ...> "
+banner = "struixLang REPL v1.0.20170518b."
 
 class Shell(code.InteractiveConsole):
     ''' Provides a REPL for struixLang. '''
     def runsource(self, source, filename="<stdin>"):
         try:
-            terp.run(source)
+            terp.run(source.splitlines()[-1])
         except:
             self.showsyntaxerror(filename)
+        if terp.isCompiling(): return True
         return False
 
 terp = struixTerp.Terp()
