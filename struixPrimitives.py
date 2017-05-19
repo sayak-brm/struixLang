@@ -293,11 +293,24 @@ class AddWords:
             code = terp.stopCompile()
             terp.define(terp.newWord, self.makeWord(code))
             terp.newWord = None
+        def NEXT(terp):
+            ''' Appends next word to stack and skips it during execution. '''
+            def helper(terp):
+                lvl = len(terp.compileStack)
+                nxt = terp.lexer.nextWord()
+                val = self.getVal(terp, nxt, lvl)
+                terp.stack.append(val)
+            if terp.newWord == None:
+                helper(terp)
+            else:
+                terp.stack.append(helper)
+        NEXT.__dict__['immediate'] = True
         DEF.__dict__['immediate'] = True
         END.__dict__['immediate'] = True
         return {
-            "DEF": DEF,
-            "END": END # ,
+            "DEF":  DEF,
+            "END":  END,
+            "NEXT": NEXT # ,
 #            ":":   DEF,
 #            ";":   END
             }
@@ -427,13 +440,6 @@ class AddWords:
                     raise IndexError('Not enough items on stack.')
                 if not terp.stack.pop():
                     break
-        def NEXT(terp):
-            ''' Appends next word to stack and skips it during execution. '''
-            lvl = len(terp.compileStack)
-            nxt = terp.lexer.nextWord()
-            def helper(terp):
-                terp.stack.append(nxt)
-        NEXT.__dict__['immediate'] = True
         return {
             "RUN":     RUN,
             "TIMES":   TIMES,
@@ -441,6 +447,5 @@ class AddWords:
             "IFFALSE": IFFALSE,
             "IFELSE":  IFELSE,
             "WHILE":   WHILE,
-            "DOWHILE": DOWHILE,
-            "NEXT":    NEXT
+            "DOWHILE": DOWHILE
             }
