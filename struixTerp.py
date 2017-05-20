@@ -1,4 +1,4 @@
-##   Copyright 2016 Sayak Brahmachari
+##   Copyright 2016-17 Sayak Brahmachari
 ##
 ##   Licensed under the Apache License, Version 2.0 (the "License");
 ##   you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@ import struixLexer
 
 class Terp:
     ''' Interpreter for struixLang. '''
-
-    ENABLE_UNSAFE_OPERATIONS = True
     
     def __init__(self):
         self.dictionary = {}
@@ -69,14 +67,6 @@ class Terp:
             else:
                 self.stack.append(word)
             self.immediate = False
-        else:
-            self.stack.append(word)
-            
-    def interpret_old(self, word):
-        ''' Executes struixLang code. '''
-        import types
-        if isinstance(word, (types.FunctionType, types.MethodType)):
-            word(self)
         else:
             self.stack.append(word)
 

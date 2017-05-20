@@ -1,4 +1,4 @@
-##   Copyright 2016 Sayak Brahmachari
+##   Copyright 2017 Sayak Brahmachari
 ##
 ##   Licensed under the Apache License, Version 2.0 (the "License");
 ##   you may not use this file except in compliance with the License.
@@ -12,29 +12,13 @@
 ##   See the License for the specific language governing permissions and
 ##   limitations under the License.
 
-import code
 import sys
 
 import struixTerp
 import struixPrimitives
 
-sys.ps1 = "sxL> "
-sys.ps2 = "    ...> "
-banner = "struixLang REPL v1.0.20170518b."
-
-class Shell(code.InteractiveConsole):
-    ''' Provides a REPL for struixLang. '''
-    def runsource(self, source, filename="<stdin>"):
-        try:
-            if '\n' in source:
-                terp.run(source.splitlines()[-1])
-            else: terp.run(source)
-        except:
-#            self.showsyntaxerror(filename)
-            self.showtraceback()
-        if terp.isCompiling(): return True
-        return False
-
+f = open(sys.argv[1], 'r')
 terp = struixTerp.Terp()
 struixPrimitives.AddWords(terp)
-Shell().interact(banner)
+terp.run(f.read())
+f.close()
