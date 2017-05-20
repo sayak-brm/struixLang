@@ -1,4 +1,8 @@
-# <img src="https://github.com/sayak-brm/struixLang/blob/master/docs/logo/struixLANG.PNG?raw=true" alt="struixLang" height="150"/>
+<!--
+# struixLang
+-->
+
+<img src="https://github.com/sayak-brm/struixLang/blob/master/docs/logo/struixLANG.PNG?raw=true" alt="struixLang" height="150"/>
 
 ##### A stack-based programming language implemented in Python3.
 
