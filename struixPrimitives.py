@@ -32,9 +32,12 @@ class AddWords:
         if wordSets is None:
             wordSets = ['lists',  'execution', 'math', 'stack', 'values',
                         'values', 'functions', 'text', 'logic', 'control',
-                        'io',  'pythonOps']
+                        'io',  'pythonOps', 'shorthand']
         for wordSet in wordSets:
-            terp.addWords(eval('self.words4{}()'.format(wordSet)))
+            try:
+                terp.addWords(eval('self.words4{}()'.format(wordSet)))
+            except AttributeError:
+                terp.run('IMPORT {}'.format(wordSet))
 
     @staticmethod
     def makeWord(code):
