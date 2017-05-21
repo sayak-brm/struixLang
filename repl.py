@@ -1,4 +1,4 @@
-##   Copyright 2016 Sayak Brahmachari
+##   Copyright 2016-17 Sayak Brahmachari
 ##
 ##   Licensed under the Apache License, Version 2.0 (the "License");
 ##   you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import struixPrimitives
 
 sys.ps1 = "sxL> "
 sys.ps2 = "    ...> "
-banner = "struixLang REPL v1.0.20170518b."
+banner = "struixLang REPL v1.0.20170521a.\nUse 'exit' to close the prompt."
 
 class Shell(code.InteractiveConsole):
     ''' Provides a REPL for struixLang. '''
