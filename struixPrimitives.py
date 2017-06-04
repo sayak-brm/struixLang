@@ -24,6 +24,7 @@ class AddWords:
             except: raise ImportError('No library named {}.'.format(name))
             terp.run(lib.read())
             lib.close()
+        IMPORT.__dict__['immediate'] = True
         terp.addWords({'IMPORT': IMPORT})
         self.unsafeOps = ENABLE_UNSAFE_OPERATIONS
         self.importWordSets(terp, wordSets)
@@ -40,15 +41,20 @@ class AddWords:
                 terp.run('IMPORT {}'.format(wordSet))
 
     @staticmethod
-    def makeWord(code):
+    def makeWord(code, imm=False):
         ''' Makes an executable word from list. '''
         def word(terp):
             ''' Template for a list executor. '''
             if isinstance(code, list):
                 pointer = 0
                 while pointer < len(code):
+                    if imm:
+                        i=code[pointer].__dict__.get('immediate', False)
+                        terp.immediate = i
                     terp.interpret(code[pointer])
                     pointer += 1
+            elif isinstance(code, (types.FunctionType, types.MethodType)):
+                code(terp)
             else:
                 raise TypeError('Expected List')
         return word
@@ -328,16 +334,26 @@ class AddWords:
             terp.startCompile()
         def END(terp):
             ''' Marks end of user-defined words. '''
+            if terp.immediate_compiled: return IMMEND(terp)
             code = terp.stopCompile()
             terp.define(terp.newWord, self.makeWord(code))
+            terp.newWord = None
+        def IMMEND(terp):
+            ''' Marks end of immediate user-defined words. '''
+            code = terp.stopCompile()
+            word = self.makeWord(code, True)
+            word.__dict__['immediate'] = True
+            terp.define(terp.newWord, word)
             terp.newWord = None
         def NEXT(terp):
             ''' Appends next word to stack and skips it during execution. '''
             def helper(terp):
                 lvl = len(terp.compileStack)
                 nxt = terp.lexer.nextWord()
+                print(nxt)
                 val = self.getVal(terp, nxt, lvl)
                 terp.stack.append(val)
+            helper.__dict__['immediate'] = True
             if terp.newWord == None:
                 helper(terp)
             else:

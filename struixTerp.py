@@ -20,6 +20,7 @@ class Terp:
     def __init__(self):
         self.dictionary = {}
         self.immediate = False
+        self.immediate_compiled = False
         self.newWord = None
         self.compileStack = [[]]
         self.stack = self.compileStack[0]
@@ -78,6 +79,7 @@ class Terp:
         fn = word if isinstance(word, (types.FunctionType, types.MethodType)) else self.lookup(word)
         if fn:
             self.immediate = fn.__dict__.get('immediate', False)
+            self.immediate_compiled |= self.immediate
             return fn
         elif isinstance(num, (int, float)):
             return num
@@ -95,6 +97,7 @@ class Terp:
     def stopCompile(self):
         ''' Discretely replaces the compile buffer with data stack. '''
         if len(self.compileStack) > 1:
+            self.immediate_compiled = False
             dataStack = self.compileStack.pop()
             self.stack = self.compileStack[-1]
             return dataStack
