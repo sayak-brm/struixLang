@@ -350,7 +350,6 @@ class AddWords:
             def helper(terp):
                 lvl = len(terp.compileStack)
                 nxt = terp.lexer.nextWord()
-                print(nxt)
                 val = self.getVal(terp, nxt, lvl)
                 terp.stack.append(val)
             helper.__dict__['immediate'] = True
@@ -414,6 +413,8 @@ class AddWords:
         def FALSE(terp):
             ''' Represents the boolean False. '''
             terp.stack.append(False)
+        TRUE.__dict__['immediate'] = True
+        FALSE.__dict__['immediate'] = True
         return {
             "NOT":   NOT,
             "TRUE":  TRUE,
