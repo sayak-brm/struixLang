@@ -74,18 +74,18 @@ class Terp:
     def compile(self, word, errMsg = 'Unknown Word: {}'):
         ''' Compiles struixLang code to its internal representation. '''
         import types
-        word = word.upper() if isinstance(word, str) else word
-        num = self.parseNumber(word) if not isinstance(word, (types.FunctionType, types.MethodType)) else None
-        fn = word if isinstance(word, (types.FunctionType, types.MethodType)) else self.lookup(word)
+        uword = word.upper() if isinstance(word, str) else word
+        num = self.parseNumber(uword) if not isinstance(word, (types.FunctionType, types.MethodType)) else None
+        fn = word if isinstance(uword, (types.FunctionType, types.MethodType)) else self.lookup(word)
         if fn:
             self.immediate = fn.__dict__.get('immediate', False)
             self.immediate_compiled |= self.immediate
             return fn
         elif isinstance(num, (int, float)):
             return num
-        elif word[0] in ['\'', '\"']:
-            self.lexer.rewind(len(word[1:]))
-            return self.lexer.charsTill(word[0])
+        elif uword[0] in ['\'', '\"']:
+            if uword[-1] == uword[0]: return word[1:-1]
+            return word[1:] + self.lexer.charsTill(word[0])
         else:
             raise ValueError(errMsg.format(word))
 
