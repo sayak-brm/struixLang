@@ -48,8 +48,9 @@ class Lexer(SourceString):
             s += char
 
     def clear(self):
+        ''' Clears the Lexer. '''
         while not self.eos: self.eat_length(1)
         
     def clearLine(self):
-        ''' Clears the Lexer. '''
+        ''' Clears the Lexer till the end of the line. '''
         self.charsTill('\n')
