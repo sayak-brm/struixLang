@@ -29,8 +29,9 @@ class Shell(code.InteractiveConsole):
             if '\n' in source:
                 terp.run(source.splitlines()[-1])
             else: terp.run(source)
-        except:
+        except Exception as ex:
 #            self.showsyntaxerror(filename)
+            if ex is SystemExit: exit()
             self.showtraceback()
         if terp.isCompiling(): return True
         return False

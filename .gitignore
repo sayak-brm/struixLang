@@ -45,8 +45,11 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Custom
 *.pyc
 altDocs/~$ruixLang.docx
 *.ignore
 *.tmp
 docs/docs/~$ruixLang.docx
+partpy/*

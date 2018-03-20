@@ -45,6 +45,7 @@ class AddWords:
         ''' Makes an executable word from list. '''
         def word(terp):
             ''' Template for a list executor. '''
+            import types
             if isinstance(code, list):
                 pointer = 0
                 while pointer < len(code):
@@ -226,7 +227,6 @@ class AddWords:
                 def access(self, terp):
                     ''' Puts the value of the constant on the stack. '''
                     terp.stack.append(self.val)
-            import types
             name = terp.lexer.nextWord()
             lvl = len(terp.compileStack)
             val = self.getVal(terp, terp.lexer.nextWord(), lvl)
@@ -238,7 +238,6 @@ class AddWords:
             terp.define(name, const.access)
         def ASSIGN(terp):
             ''' Helps storing values to variables. (INFIX) '''
-            import types
             nxt = terp.lexer.nextWord()
             if nxt is '':
                 raise SyntaxError('Invalid Syntax')
@@ -255,7 +254,6 @@ class AddWords:
                 terp.stack.append(helper)
         def STORE(terp):
             ''' Helps storing values to variables. (POSTFIX) '''
-            import types
             if len(terp.stack) < 2:
                 raise IndexError('Not enough items on stack.')
             val = terp.stack.pop()
