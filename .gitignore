@@ -53,3 +53,4 @@ altDocs/~$ruixLang.docx
 *.tmp
 docs/docs/~$ruixLang.docx
 partpy/*
+.vscode/*
