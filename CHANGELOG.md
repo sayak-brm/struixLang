@@ -1,8 +1,8 @@
-**Changelog**
+# Changelog
 
 ---
 
-### Introduction of struixC: A Subset of C Compiling to struixLang 22/11/2024
+### Introduction of struixC: A Subset of C Compiling to struixLang (22/11/2024)
 
 **Overview:**
 
@@ -99,7 +99,7 @@
 
 ---
 
-21/11/2024: Restructuring, code cleanup, and new features added.
+### 21/11/2024: Restructuring, Code Cleanup, and New Features Added
 
 - **Updated Documentation to Include New Primitives and Features**
 
@@ -185,20 +185,3 @@
     - Updated the **Table of Contents** to reflect new sections and features.
     - Reorganized sections for better flow and readability.
     - Ensured consistency in formatting and examples throughout the documentation.
-
----
-
-**Git Commit Message**
-
-```
-Update documentation to include new primitives and features
-
-- Added new data types: Arrays (implemented as lists)
-- Documented new primitives: BITNOT, NEGATE, INCR, DECR, STORE_ITEM
-- Enhanced control structures with detailed explanations and examples
-- Expanded built-in functions: mathematical, time/date, random, file I/O, networking
-- Improved string manipulation documentation with STRCAT, STRLEN, SUBSTR
-- Added advanced examples: Factorial calculation, Fibonacci sequence, File reading
-- Abstracted implementation details to focus on usage and clarity
-- Updated Table of Contents and reorganized content for better readability
-```
