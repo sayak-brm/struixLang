@@ -1,0 +1,15 @@
+DEF CURRENT_TIME
+    PYIMPORT 'time'
+    PYEXEC 'terp.stack.append(time.time())'
+END
+
+DEF SLEEP
+    PYIMPORT 'time'
+    PYEXEC 'time.sleep(terp.stack.pop())'
+END
+
+DEF FORMAT_TIME
+    SWAP
+    PYIMPORT 'time'
+    PYEXEC 'fmt = terp.stack.pop(); timestamp = terp.stack.pop(); terp.stack.append(time.strftime(fmt, time.localtime(timestamp)))'
+END

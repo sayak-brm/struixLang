@@ -1,0 +1,22 @@
+DEF NEW_DICT
+    PYEXEC 'terp.stack.append({})'
+END
+
+DEF DICT_SET
+    SWAP OVER
+    PYEXEC 'key = terp.stack.pop(); value = terp.stack.pop(); terp.stack[-1][key] = value'
+END
+
+DEF DICT_GET
+    SWAP
+    PYEXEC 'key = terp.stack.pop(); terp.stack.append(terp.stack[-1][key])'
+END
+
+DEF NEW_SET
+    PYEXEC 'terp.stack.append(set())'
+END
+
+DEF SET_ADD
+    SWAP
+    PYEXEC 'value = terp.stack.pop(); terp.stack[-1].add(value)'
+END

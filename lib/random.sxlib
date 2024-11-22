@@ -1,0 +1,15 @@
+DEF RANDOM
+    PYIMPORT 'random'
+    PYEXEC 'terp.stack.append(random.random())'
+END
+
+DEF RANDINT
+    SWAP OVER
+    PYIMPORT 'random'
+    PYEXEC 'high = terp.stack.pop(); low = terp.stack.pop(); terp.stack.append(random.randint(low, high))'
+END
+
+DEF CHOICE
+    PYIMPORT 'random'
+    PYEXEC 'terp.stack.append(random.choice(terp.stack.pop()))'
+END

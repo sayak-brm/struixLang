@@ -1,0 +1,36 @@
+DEF FOREACH
+    SWAP OVER
+    VAR code
+    code STORE
+    VAR lst
+    lst STORE
+    lst FETCH LENGTH VAR len len STORE
+    VAR idx 0 idx STORE
+    [ idx FETCH len FETCH < ]  # Condition
+    [
+        lst FETCH idx FETCH ITEM  # Get item
+        code FETCH RUN            # Run code on item
+        idx FETCH 1 + idx STORE   # idx += 1
+    ] WHILE
+END
+
+DEF MAP
+    SWAP OVER
+    VAR code
+    code STORE
+    VAR lst
+    lst STORE
+    lst FETCH LENGTH VAR len len STORE
+    VAR idx 0 idx STORE
+    VAR result []
+    result STORE
+    [ idx FETCH len FETCH < ]  # Condition
+    [
+        lst FETCH idx FETCH ITEM  # Get item
+        code FETCH RUN            # Run code on item
+        result FETCH SWAP
+        PYEXEC 'terp.stack[-1].append(terp.stack.pop())'  # Append to result
+        idx FETCH 1 + idx STORE   # idx += 1
+    ] WHILE
+    result FETCH
+END

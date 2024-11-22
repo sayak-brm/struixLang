@@ -1,0 +1,17 @@
+DEF OPEN_FILE
+    SWAP
+    PYEXEC 'terp.stack.append(open(terp.stack.pop(), terp.stack.pop()))'
+END
+
+DEF READ_FILE
+    PYEXEC 'terp.stack.append(terp.stack.pop().read())'
+END
+
+DEF WRITE_FILE
+    SWAP
+    PYEXEC 'file = terp.stack.pop(); data = terp.stack.pop(); file.write(data)'
+END
+
+DEF CLOSE_FILE
+    PYEXEC 'terp.stack.pop().close()'
+END
