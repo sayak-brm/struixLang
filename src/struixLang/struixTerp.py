@@ -1,18 +1,6 @@
-##   Copyright 2016-17 Sayak Brahmachari
-##
-##   Licensed under the Apache License, Version 2.0 (the "License");
-##   you may not use this file except in compliance with the License.
-##   You may obtain a copy of the License at
-##
-##       http://www.apache.org/licenses/LICENSE-2.0
-##
-##   Unless required by applicable law or agreed to in writing, software
-##   distributed under the License is distributed on an "AS IS" BASIS,
-##   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-##   See the License for the specific language governing permissions and
-##   limitations under the License.
+##   Copyright 2016-24 Sayak Brahmachari
 
-import struixLexer
+from . import struixLexer
 
 class Terp:
     ''' Interpreter for struixLang. '''
@@ -71,20 +59,25 @@ class Terp:
         else:
             self.stack.append(word)
 
-    def compile(self, word, errMsg = 'Unknown Word: {}'):
-        ''' Compiles struixLang code to its internal representation. '''
+    def compile(self, word, errMsg='Unknown Word: {}'):
+        """ Compiles struixLang code to its internal representation. """
         import types
         uword = word.upper() if isinstance(word, str) else word
         num = self.parseNumber(uword) if not isinstance(word, (types.FunctionType, types.MethodType)) else None
         fn = word if isinstance(uword, (types.FunctionType, types.MethodType)) else self.lookup(word)
+
         if fn:
             self.immediate = fn.__dict__.get('immediate', False)
             self.immediate_compiled |= self.immediate
             return fn
         elif isinstance(num, (int, float)):
             return num
-        elif uword[0] in ['\'', '\"']:
-            if uword[-1] == uword[0]: return word[1:-1]
+        elif isinstance(uword, str) and uword.startswith(('"""', "'''")):
+            return self.lexer.charsTillMultiline(uword[:3])  # Handle multi-line strings
+        elif (uword := str(uword))[0] in ['\'', '\"']:
+            word = str(word)
+            if uword[-1] == uword[0]:
+                return word[1:-1]
             return word[1:] + self.lexer.charsTill(word[0])
         else:
             raise ValueError(errMsg.format(word))

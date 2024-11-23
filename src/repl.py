@@ -15,8 +15,7 @@
 import code
 import sys
 
-import struixTerp
-import struixPrimitives
+from struixLang import struixTerp, struixPrimitives
 
 sys.ps1 = "sxL> "
 sys.ps2 = "    ...> "

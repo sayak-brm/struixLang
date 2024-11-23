@@ -1,3 +1,5 @@
+##   Copyright 2016-2024 Sayak Brahmachari
+ 
 class AddWords:
     ''' Provides Built-in Words for the struixLang Interpreter. '''
     def __init__(self, terp, ENABLE_UNSAFE_OPERATIONS = False, wordSets = None):
@@ -22,7 +24,7 @@ class AddWords:
             wordSets = ['lists', 'execution', 'math', 'stack', 'values',
                 'functions', 'text', 'logic', 'control',
                 'io', 'pythonOps', 'shorthand', 'arithmetic',
-                'logic_ext', 'string_ops', 'math_ext',
+                'logic_ops', 'string_ops', 'math_ext',
                 'file_io', 'data_structs', 'control_ext',
                 'time_date', 'random', 'bitwise_ops', 'network'
             ]
@@ -235,7 +237,8 @@ class AddWords:
                     object.__setattr__(self, name, val)
                 def access(self, terp):
                     ''' Puts the value of the constant on the stack. '''
-                    terp.stack.append(self.val)
+                    # terp.stack.append(self.val)
+                    terp.stack.append(getattr(self, 'val'))
             name = terp.lexer.nextWord()
             lvl = len(terp.compileStack)
             val = self.getVal(terp, terp.lexer.nextWord(), lvl)

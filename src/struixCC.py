@@ -1,9 +1,26 @@
 import sys
 from pycparser import c_parser, c_ast
+import re
 
 class CompilationError(Exception):
     """Exception raised for errors during the compilation process."""
     pass
+
+def remove_comments(code):
+    """
+    Remove single-line (//) and multi-line (/* */) comments from C code.
+
+    Parameters:
+        code (str): The C code with comments.
+
+    Returns:
+        str: The C code with comments removed.
+    """
+    # Remove single-line comments
+    code = re.sub(r'//.*', '', code)
+    # Remove multi-line comments
+    code = re.sub(r'/\*.*?\*/', '', code, flags=re.DOTALL)
+    return code
 
 class StruixCC(c_ast.NodeVisitor):
     """
@@ -38,7 +55,8 @@ class StruixCC(c_ast.NodeVisitor):
         """
         parser = c_parser.CParser()
         try:
-            ast = parser.parse(code)
+            cleaned_code = remove_comments(code)
+            ast = parser.parse(cleaned_code)
             self.visit(ast)
             if self.errors:
                 raise CompilationError("Compilation failed with errors.")
@@ -292,87 +310,86 @@ class StruixCC(c_ast.NodeVisitor):
 
     def visit_Switch(self, node):
         """
-        Visit a switch statement node and compile it into chained if-else statements.
-        
+        Visit a switch statement node and compile it with break flag support.
+
         Parameters:
             node (c_ast.Switch): The switch statement node.
         """
-        self.warning("Switch statements are converted to chained if-else statements.")
-
-        # Evaluate the switch expression
-        self.visit(node.cond)
         # Store the switch expression in a variable
+        self.visit(node.cond)
         self.emit('VAR SWITCH_EXPR')
         self.emit('SWITCH_EXPR STORE')
 
-        # Process cases
-        case_compiler = StruixCC()
-        case_compiler.symbol_table = self.symbol_table.copy()
-        case_compiler.switch_cases = []
-        case_compiler.visit(node.stmt)
+        # Initialize BREAK_FLAG
+        self.emit('VAR BREAK_FLAG')
+        self.emit('RESET_BREAK_FLAG')  # Initially set to False
 
-        # Build chained if-else
-        else_code = None
-        for case_value, case_code in reversed(case_compiler.switch_cases):
-            # Emit code for each case
+        # Process cases
+        self.case_blocks = []
+        self.default_block = None
+
+        # Visit the switch body to collect case/default blocks
+        self.visit(node.stmt)
+
+        # Compile cases in reverse order with break logic
+        for case_value, case_code in reversed(self.case_blocks):
             self.emit('SWITCH_EXPR FETCH')
             self.emit(f'{case_value}')
             self.emit('==')
+            self.emit('BREAK_FLAG FETCH NOT AND')  # Ensure case executes only if BREAK_FLAG is False
             self.emit(f'[ {" ".join(case_code)} ]')
-            if else_code:
-                self.emit(f'[ {" ".join(else_code)} ]')
-                self.emit('IFELSE')
-            else:
-                self.emit('IFTRUE')
-            else_code = self.output.copy()
-            self.output = []
+            self.emit('IFTRUE')
 
-        # Handle default case if present
-        if hasattr(case_compiler, 'default_code'):
-            self.emit(f'[ {" ".join(case_compiler.default_code)} ]')
-            self.emit('RUN')
-        else:
-            if else_code:
-                self.output = else_code
+        # Add the default case at the end
+        if self.default_block:
+            self.emit('BREAK_FLAG FETCH NOT')
+            self.emit(f'[ {" ".join(self.default_block)} ]')
+            self.emit('IFTRUE')
 
-        # Clean up the switch expression variable
+        # Cleanup switch variables
         self.emit('SWITCH_EXPR DROP')
+        self.emit('BREAK_FLAG DROP')
 
     def visit_Case(self, node):
         """
-        Visit a case label within a switch statement and compile its body.
-        
-        Parameters:
-            node (c_ast.Case): The case label node.
-        """
-        # Evaluate case value
-        case_value = self.evaluate_constant(node.expr)  # Case value
+        Visit a case label and compile its body.
 
-        # Compile case body
+        Parameters:
+            node (c_ast.Case): The case node.
+        """
+        # Get the case value
+        case_value = self.evaluate_constant(node.expr)
+
+        # Compile the case body
         case_body_compiler = StruixCC()
         case_body_compiler.symbol_table = self.symbol_table.copy()
         for stmt in node.stmts or []:
             case_body_compiler.visit(stmt)
-        case_body_code = case_body_compiler.output
 
-        # Store case information
-        if not hasattr(self, 'switch_cases'):
-            self.switch_cases = []
-        self.switch_cases.append((case_value, case_body_code))
+        # Append `SET_BREAK_FLAG` at the end of the case
+        case_body_compiler.emit('SET_BREAK_FLAG')
+
+        # Append case block
+        self.case_blocks.append((case_value, case_body_compiler.output))
 
     def visit_Default(self, node):
         """
-        Visit a default label within a switch statement and compile its body.
-        
+        Visit a default label and compile its body.
+
         Parameters:
-            node (c_ast.Default): The default label node.
+            node (c_ast.Default): The default node.
         """
-        # Compile default case body
+        # Compile the default case body
         default_body_compiler = StruixCC()
         default_body_compiler.symbol_table = self.symbol_table.copy()
         for stmt in node.stmts or []:
             default_body_compiler.visit(stmt)
-        self.default_code = default_body_compiler.output
+
+        # Append `SET_BREAK_FLAG` at the end of the default
+        default_body_compiler.emit('SET_BREAK_FLAG')
+
+        # Store the default block
+        self.default_block = default_body_compiler.output
 
     def evaluate_constant(self, node):
         """
@@ -700,26 +717,99 @@ class StruixCC(c_ast.NodeVisitor):
             self.visit(ext)
 
 
-# Example usage
 if __name__ == '__main__':
-    c_code = r'''
-    int main() {
-        int arr[5];
-        int i;
-        for (i = 0; i < 5; i++) {
-            arr[i] = i * 2;
-        }
-        int sum = 0;
-        for (i = 0; i < 5; i++) {
-            sum = sum + arr[i];
-        }
-        return sum;
-    }
-    '''
+    # List of C code snippets to compile and test
+    test_cases = [
+        {
+            "description": "Basic array manipulation and summation",
+            "code": r'''
+            int main() {
+                int arr[5];
+                int i;
+                for (i = 0; i < 5; i++) {
+                    arr[i] = i * 2;
+                }
+                int sum = 0;
+                for (i = 0; i < 5; i++) {
+                    sum = sum + arr[i];
+                }
+                return sum;
+            }
+            '''
+        },
+        {
+            "description": "Simple arithmetic and conditionals",
+            "code": r'''
+            int main() {
+                int a = 10, b = 20;
+                int result = 0;
+                if (a < b) {
+                    result = a + b;
+                } else {
+                    result = a - b;
+                }
+                return result;
+            }
+            '''
+        },
+        {
+            "description": "Nested loops with multiplication table",
+            "code": r'''
+            int main() {
+                int i, j;
+                int table[10][10];
+                for (i = 1; i <= 10; i++) {
+                    for (j = 1; j <= 10; j++) {
+                        table[i-1][j-1] = i * j;
+                    }
+                }
+                return table[9][9]; // Return 10 * 10
+            }
+            '''
+        },
+        {
+            "description": "Switch statement example",
+            "code": r'''
+            int main() {
+                int value = 3;
+                int result = 0;
+                switch (value) {
+                    case 1: result = 10; break;
+                    case 2: result = 20; break;
+                    case 3: result = 30; break;
+                    default: result = -1; break;
+                }
+                return result;
+            }
+            '''
+        },
+        {
+            "description": "Function call with parameters",
+            "code": r'''
+            int add(int a, int b) {
+                return a + b;
+            }
 
+            int main() {
+                int x = 5, y = 10;
+                int sum = add(x, y);
+                return sum;
+            }
+            '''
+        }
+    ]
+
+    # Initialize the compiler
     compiler = StruixCC()
-    try:
-        toy_code = compiler.compile(c_code)
-        print(toy_code)
-    except CompilationError:
-        print("Compilation failed due to errors.")
+
+    # Test each case
+    for idx, test in enumerate(test_cases, start=1):
+        print(f"Test Case {idx}: {test['description']}")
+        try:
+            toy_code = compiler.compile(test['code'])
+            print("Generated Toy Code:")
+            print(toy_code)
+            print("-" * 40)
+        except CompilationError:
+            print("Compilation failed due to errors.")
+            print("-" * 40)

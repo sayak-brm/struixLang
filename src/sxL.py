@@ -14,8 +14,7 @@
 
 import sys
 
-import struixTerp
-import struixPrimitives
+from struixLang import struixTerp, struixPrimitives
 
 f = open(sys.argv[1], 'r')
 terp = struixTerp.Terp()
