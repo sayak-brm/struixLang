@@ -12,9 +12,9 @@ class Terp:
         self.newWord = None
         self.compileStack = [[]]
         self.stack = self.compileStack[0]
-        
+
     def addWords(self, newWords):
-        ''' Adds given words to interpretor dictionary. '''
+        ''' Adds given words to interpreter dictionary. '''
         self.dictionary.update(newWords)
 
     def define(self, word, code):
@@ -38,14 +38,21 @@ class Terp:
             except ValueError:
                 num = None
         return num
-        
+
     def run(self, text):
-        ''' Starts processing of struixLang code. '''
+        ''' Starts processing of struixLang code with enhanced error reporting. '''
         self.lexer = struixLexer.Lexer(text)
         word = None
         while self.lexer.peekWord():
-            word = self.compile(self.lexer.nextWord())
-            self.interpret(word)
+            try:
+                word_text = self.lexer.nextWord()
+                word = self.compile(word_text)
+                self.interpret(word)
+            except Exception as e:
+                # Include the word and position in the exception message
+                line_number = self.lexer.line_number
+                column_number = self.lexer.column_number - len(word_text)
+                raise Exception(f"Error processing word '{word_text}' at line {line_number}, column {column_number}: {e}") from e
 
     def interpret(self, word):
         ''' Executes struixLang code. '''
@@ -97,5 +104,5 @@ class Terp:
         return self.compileStack[0]
 
     def isCompiling(self):
-        ''' Checks if the interpretor is in compile mode. '''
+        ''' Checks if the interpreter is in compile mode. '''
         return True if len(self.compileStack) > 1 else False

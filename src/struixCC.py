@@ -59,11 +59,11 @@ class StruixCC(c_ast.NodeVisitor):
             ast = parser.parse(cleaned_code)
             self.visit(ast)
             if self.errors:
-                raise CompilationError("Compilation failed with errors.")
+                raise CompilationError(f"Compilation failed with errors: {', '.join(self.errors)}.")
             return '\n'.join(self.output)
         except c_parser.ParseError as e:
             self.error(f"Syntax error: {e}")
-            raise CompilationError("Compilation failed due to syntax error.")
+            raise CompilationError("Compilation failed due to syntax error:") from e
 
     def emit(self, code):
         """

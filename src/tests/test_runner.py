@@ -19,12 +19,6 @@ def run_test_case(index=None):
     Parameters:
         index (int or list[int]): Index or list of indices of test cases to run.
     """
-    # Initialize struixLang interpreter
-    terp = Terp()
-    AddWords(terp)
-
-    # Initialize the compiler
-    compiler = StruixCC()
 
     # If index is None, run all test cases
     if index is None:
@@ -37,19 +31,52 @@ def run_test_case(index=None):
     # Run the test cases
     for idx, test in selected_cases:
         print(f"Test Case {idx}: {test['description']}")
+        compiler = StruixCC()  # Initialize the compiler for each test case
         try:
             # Compile the C code
-            toy_code = compiler.compile(test['code'])
-            print("Generated Toy Code:")
-            print(toy_code)
+            sx_code = compiler.compile(test['code'])
+            print("Generated struixLang Code:")
+            print(sx_code)
+
+            # Initialize struixLang interpreter
+            terp = Terp()
+            AddWords(terp)
+
+            # Define a function to capture the return value of 'main'
+            def capture_return():
+                terp.run(sx_code)
+                # Fetch the return value of 'main' from the stack
+                if terp.stack:
+                    return terp.stack.pop()
+                else:
+                    return None
+
+            # Execute the code and capture the return value
             print("Executing Toy Code:")
-            
-            # Execute the struixLang code
-            terp.run(toy_code)
+            result = capture_return()
+            expected = test['output']
+
+            # Compare the result with the expected output
+            if result == expected:
+                print(f"Test Case {idx} Passed! Output: {result}")
+            else:
+                print(f"Test Case {idx} Failed!")
+                print(f"Expected Output: {expected}, Actual Output: {result}")
+
             print("-" * 40)
-        except CompilationError:
-            print("Compilation failed due to errors.")
+        except CompilationError as e:
+            expected = test['output']
+            error_message = str(e)
+            if expected in error_message:
+                print(f"Test Case {idx} Passed! Expected error occurred: {expected}")
+                print("-" * 40)
+            else:
+                print(f"Test Case {idx} Failed!")
+                print(f"Expected Output: {expected}, Error during compilation: {error_message}")
+        except Exception as e:
+            print(f"Execution failed with exception: {e}")
             print("-" * 40)
+            break
 
 if __name__ == "__main__":
     # Get the indices of test cases to run from command-line arguments
