@@ -367,7 +367,7 @@ class StruixCC(c_ast.NodeVisitor):
             case_body_compiler.visit(stmt)
 
         # Append `SET_BREAK_FLAG` at the end of the case
-        case_body_compiler.emit('SET_BREAK_FLAG')
+        case_body_compiler.emit_flag_set('BREAK_FLAG')
 
         # Append case block
         self.case_blocks.append((case_value, case_body_compiler.output))
@@ -386,10 +386,25 @@ class StruixCC(c_ast.NodeVisitor):
             default_body_compiler.visit(stmt)
 
         # Append `SET_BREAK_FLAG` at the end of the default
-        default_body_compiler.emit('SET_BREAK_FLAG')
+        default_body_compiler.emit_flag_set('BREAK_FLAG')
 
         # Store the default block
         self.default_block = default_body_compiler.output
+
+    def emit_flag_reset(self, flag_name):
+        """Helper to reset a flag"""
+        self.emit(f'FALSE {flag_name} STORE')
+
+    def emit_flag_set(self, flag_name):
+        """Helper to set a flag"""
+        self.emit(f'TRUE {flag_name} STORE')
+
+    def visit_Break(self, node):
+        self.emit('SET_BREAK_FLAG')  # Emit code to set the BREAK_FLAG
+
+    def visit_Continue(self, node):
+        """Handle continue statements by setting CONTINUE_FLAG"""
+        self.emit('SET_CONTINUE_FLAG')  # Emit code to set the CONTINUE_FLAG
 
     def evaluate_constant(self, node):
         """
@@ -409,30 +424,44 @@ class StruixCC(c_ast.NodeVisitor):
 
     def visit_While(self, node):
         """
-        Visit a while loop node and compile it.
+        Compile a while loop with correct `break` and `continue` behavior.
+
+        Parameters:
+            node (c_ast.While): The while loop node.
         """
-        # Compile condition
+        # Compile the condition
         cond_compiler = StruixCC()
         cond_compiler.symbol_table = self.symbol_table.copy()
         cond_compiler.visit(node.cond)
         cond_code = cond_compiler.output
 
-        # Compile loop body
+        # Compile the loop body
         body_compiler = StruixCC()
         body_compiler.symbol_table = self.symbol_table.copy()
         body_compiler.visit(node.stmt)
         body_code = body_compiler.output
 
-        # Emit WHILE loop with BREAK_FLAG
-        self.emit('VAR BREAK_FLAG')  # Declare BREAK_FLAG
-        self.emit('RESET_BREAK_FLAG')  # Initialize BREAK_FLAG to False
+        # Declare and reset control flags
+        self.emit('VAR BREAK_FLAG')           # Declare BREAK_FLAG
+        self.emit('VAR CONTINUE_FLAG')        # Declare CONTINUE_FLAG
+        self.emit('RESET_BREAK_FLAG')         # Initialize BREAK_FLAG to False
+        self.emit('RESET_CONTINUE_FLAG')      # Initialize CONTINUE_FLAG to False
 
-        # Condition: Check loop condition and BREAK_FLAG
-        self.emit(f'[ {" ".join(cond_code)} BREAK_FLAG FETCH NOT AND ]')  # Combine loop condition with BREAK_FLAG
-        self.emit(f'[ {" ".join(body_code)} ]')  # Loop body
-        self.emit('WHILE')
+        # Modify the loop condition to include BREAK_FLAG
+        self.emit(f'[ {" ".join(cond_code)} BREAK_FLAG FETCH NOT AND ]')
 
-        self.emit('BREAK_FLAG DROP')  # Cleanup BREAK_FLAG
+        # Emit the loop body with CONTINUE_FLAG handling
+        self.emit(f'''[
+            CONTINUE_FLAG FETCH NOT
+            [
+                {" ".join(body_code)}
+            ] IFTRUE
+            RESET_CONTINUE_FLAG
+        ] WHILE''')
+
+        # Cleanup flags after the loop
+        self.emit('BREAK_FLAG DROP')
+        self.emit('CONTINUE_FLAG DROP')
 
     def visit_DoWhile(self, node):
         """
@@ -452,7 +481,7 @@ class StruixCC(c_ast.NodeVisitor):
 
         # Emit DOWHILE loop with BREAK_FLAG
         self.emit('VAR BREAK_FLAG')  # Declare BREAK_FLAG
-        self.emit('RESET_BREAK_FLAG')  # Initialize BREAK_FLAG to False
+        self.emit_flag_reset('BREAK_FLAG')  # Initialize BREAK_FLAG to False
 
         # Combine loop body and condition with BREAK_FLAG
         self.emit(f'[ {" ".join(body_code)} BREAK_FLAG FETCH NOT AND ]')  # Body execution with BREAK_FLAG
@@ -462,9 +491,6 @@ class StruixCC(c_ast.NodeVisitor):
         self.emit('BREAK_FLAG DROP')  # Cleanup BREAK_FLAG
 
     def visit_For(self, node):
-        """
-        Visit a for loop node and compile it.
-        """
         # Compile initialization
         if node.init:
             self.visit(node.init)
@@ -475,11 +501,10 @@ class StruixCC(c_ast.NodeVisitor):
         if node.cond:
             cond_compiler.visit(node.cond)
         else:
-            # Infinite loop if no condition
-            cond_compiler.emit('TRUE')
+            cond_compiler.emit('TRUE')  # Infinite loop if no condition
         cond_code = cond_compiler.output
 
-        # Compile increment (next)
+        # Compile increment
         next_compiler = StruixCC()
         next_compiler.symbol_table = self.symbol_table.copy()
         if node.next:
@@ -492,15 +517,22 @@ class StruixCC(c_ast.NodeVisitor):
         body_compiler.visit(node.stmt)
         body_code = body_compiler.output
 
-        # Emit WHILE loop with combined condition and BREAK_FLAG
+        # Emit WHILE loop with BREAK_FLAG and CONTINUE_FLAG
         self.emit('VAR BREAK_FLAG')  # Declare BREAK_FLAG
+        self.emit('VAR CONTINUE_FLAG')  # Declare CONTINUE_FLAG
         self.emit('RESET_BREAK_FLAG')  # Initialize BREAK_FLAG to False
+        self.emit('RESET_CONTINUE_FLAG')  # Initialize CONTINUE_FLAG to False
 
-        self.emit(f'[ {" ".join(cond_code)} BREAK_FLAG FETCH NOT AND ]')  # Condition block
-        self.emit(f'[ {" ".join(body_code + next_code)} ]')  # Loop body and increment
+        # Modify condition to include BREAK_FLAG
+        self.emit(f'[ {" ".join(cond_code)} BREAK_FLAG FETCH NOT AND ]')
+
+        # Modify body to include CONTINUE_FLAG and increment
+        self.emit(f'[ CONTINUE_FLAG FETCH NOT [ {" ".join(body_code + next_code)} RESET_CONTINUE_FLAG ] IFTRUE ]')
         self.emit('WHILE')
 
-        self.emit('BREAK_FLAG DROP')  # Cleanup BREAK_FLAG
+        # Cleanup flags
+        self.emit('BREAK_FLAG DROP')
+        self.emit('CONTINUE_FLAG DROP')
 
     def visit_FuncCall(self, node):
         """
@@ -718,103 +750,6 @@ class StruixCC(c_ast.NodeVisitor):
         Parameters:
             node (c_ast.FileAST): The root AST node.
         """
+        self.emit("IMPORT struixCC")
         for ext in node.ext:
             self.visit(ext)
-
-
-if __name__ == '__main__':
-    # List of C code snippets to compile and test
-    test_cases = [
-        {
-            "description": "Basic array manipulation and summation",
-            "code": r'''
-            int main() {
-                int arr[5];
-                int i;
-                for (i = 0; i < 5; i++) {
-                    arr[i] = i * 2;
-                }
-                int sum = 0;
-                for (i = 0; i < 5; i++) {
-                    sum = sum + arr[i];
-                }
-                return sum;
-            }
-            '''
-        },
-        {
-            "description": "Simple arithmetic and conditionals",
-            "code": r'''
-            int main() {
-                int a = 10, b = 20;
-                int result = 0;
-                if (a < b) {
-                    result = a + b;
-                } else {
-                    result = a - b;
-                }
-                return result;
-            }
-            '''
-        },
-        {
-            "description": "Nested loops with multiplication table",
-            "code": r'''
-            int main() {
-                int i, j;
-                int table[10][10];
-                for (i = 1; i <= 10; i++) {
-                    for (j = 1; j <= 10; j++) {
-                        table[i-1][j-1] = i * j;
-                    }
-                }
-                return table[9][9]; // Return 10 * 10
-            }
-            '''
-        },
-        {
-            "description": "Switch statement example",
-            "code": r'''
-            int main() {
-                int value = 3;
-                int result = 0;
-                switch (value) {
-                    case 1: result = 10; break;
-                    case 2: result = 20; break;
-                    case 3: result = 30; break;
-                    default: result = -1; break;
-                }
-                return result;
-            }
-            '''
-        },
-        {
-            "description": "Function call with parameters",
-            "code": r'''
-            int add(int a, int b) {
-                return a + b;
-            }
-
-            int main() {
-                int x = 5, y = 10;
-                int sum = add(x, y);
-                return sum;
-            }
-            '''
-        }
-    ]
-
-    # Initialize the compiler
-    compiler = StruixCC()
-
-    # Test each case
-    for idx, test in enumerate(test_cases, start=1):
-        print(f"Test Case {idx}: {test['description']}")
-        try:
-            toy_code = compiler.compile(test['code'])
-            print("Generated Toy Code:")
-            print(toy_code)
-            print("-" * 40)
-        except CompilationError:
-            print("Compilation failed due to errors.")
-            print("-" * 40)
