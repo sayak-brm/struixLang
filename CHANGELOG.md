@@ -1,4 +1,34 @@
-# Changelog
+## Changelog
+
+---
+
+### Enhance struixLang functionality and refactor modules for clarity (23/11/2024)
+
+**Overview:**
+
+- **Control Structure Enhancements**:
+  - Added `SET_BREAK_FLAG` and `RESET_BREAK_FLAG` functions in `control_ext.sxlib` to improve handling of breakable control structures.
+
+- **Bug Fixes**:
+  - Resolved issues with logical operations in `logic_ops.sxlib` for `NAND`, `NOR`, and `XOR`.
+
+- **Lexer Optimization**:
+  - Fixed and optimized lexer behavior in `struixLexer.py` to handle multiline strings and improve tokenization accuracy.
+
+- **Compiler Improvements**:
+  - Enhanced C-to-struixLang compiler (`struixCC.py`) with better handling of switch-case flows and break statements.
+
+- **Testing and Tools**:
+  - Introduced test cases and a test case runner to validate functionality.
+  - Added a library listing tool (`src/tools/list_libs.py`) to facilitate easy management of struixLang libraries.
+
+- **Refactoring**:
+  - Performed a comprehensive refactor for improved readability, maintainability, and enhanced docstrings for better documentation.
+
+**Impact**:
+
+- Improved functionality and reliability for struixLang users.
+- Streamlined the development and debugging processes with better tooling and documentation.
 
 ---
 
@@ -113,17 +143,22 @@
 
     - **Unary Operators:**
       - **NEGATE**: Negates the top value of the stack.
+
         ```plaintext
         10 negate print  # Outputs -10
         ```
+
       - **INCR**: Increments the value of a variable.
+
         ```plaintext
         var a
         a = 5
         a incr
         a fetch print  # Outputs 6
         ```
+
       - **DECR**: Decrements the value of a variable.
+
         ```plaintext
         var a
         a = 5
@@ -133,6 +168,7 @@
 
     - **List Operations:**
       - **STORE_ITEM**: Stores a value in a list at a given index.
+
         ```plaintext
         [ 0 0 0 ] 1 99 store_item
         pstack  # Outputs [0, 99, 0]

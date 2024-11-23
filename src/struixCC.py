@@ -410,9 +410,6 @@ class StruixCC(c_ast.NodeVisitor):
     def visit_While(self, node):
         """
         Visit a while loop node and compile it.
-        
-        Parameters:
-            node (c_ast.While): The while loop node.
         """
         # Compile condition
         cond_compiler = StruixCC()
@@ -426,17 +423,20 @@ class StruixCC(c_ast.NodeVisitor):
         body_compiler.visit(node.stmt)
         body_code = body_compiler.output
 
-        # Emit WHILE loop with condition and body
-        self.emit(f'[ {" ".join(cond_code)} ]')
-        self.emit(f'[ {" ".join(body_code)} ]')
+        # Emit WHILE loop with BREAK_FLAG
+        self.emit('VAR BREAK_FLAG')  # Declare BREAK_FLAG
+        self.emit('RESET_BREAK_FLAG')  # Initialize BREAK_FLAG to False
+
+        # Condition: Check loop condition and BREAK_FLAG
+        self.emit(f'[ {" ".join(cond_code)} BREAK_FLAG FETCH NOT AND ]')  # Combine loop condition with BREAK_FLAG
+        self.emit(f'[ {" ".join(body_code)} ]')  # Loop body
         self.emit('WHILE')
+
+        self.emit('BREAK_FLAG DROP')  # Cleanup BREAK_FLAG
 
     def visit_DoWhile(self, node):
         """
         Visit a do-while loop node and compile it.
-        
-        Parameters:
-            node (c_ast.DoWhile): The do-while loop node.
         """
         # Compile condition
         cond_compiler = StruixCC()
@@ -450,17 +450,20 @@ class StruixCC(c_ast.NodeVisitor):
         body_compiler.visit(node.stmt)
         body_code = body_compiler.output
 
-        # Emit DOWHILE loop with condition and body
-        self.emit(f'[ {" ".join(cond_code)} ]')
-        self.emit(f'[ {" ".join(body_code)} ]')
+        # Emit DOWHILE loop with BREAK_FLAG
+        self.emit('VAR BREAK_FLAG')  # Declare BREAK_FLAG
+        self.emit('RESET_BREAK_FLAG')  # Initialize BREAK_FLAG to False
+
+        # Combine loop body and condition with BREAK_FLAG
+        self.emit(f'[ {" ".join(body_code)} BREAK_FLAG FETCH NOT AND ]')  # Body execution with BREAK_FLAG
+        self.emit(f'[ {" ".join(cond_code)} ]')  # Loop condition
         self.emit('DOWHILE')
+
+        self.emit('BREAK_FLAG DROP')  # Cleanup BREAK_FLAG
 
     def visit_For(self, node):
         """
         Visit a for loop node and compile it.
-        
-        Parameters:
-            node (c_ast.For): The for loop node.
         """
         # Compile initialization
         if node.init:
@@ -489,13 +492,15 @@ class StruixCC(c_ast.NodeVisitor):
         body_compiler.visit(node.stmt)
         body_code = body_compiler.output
 
-        # Combine body and increment
-        loop_body = body_code + next_code
+        # Emit WHILE loop with combined condition and BREAK_FLAG
+        self.emit('VAR BREAK_FLAG')  # Declare BREAK_FLAG
+        self.emit('RESET_BREAK_FLAG')  # Initialize BREAK_FLAG to False
 
-        # Emit WHILE loop with condition and combined body
-        self.emit(f'[ {" ".join(cond_code)} ]')
-        self.emit(f'[ {" ".join(loop_body)} ]')
+        self.emit(f'[ {" ".join(cond_code)} BREAK_FLAG FETCH NOT AND ]')  # Condition block
+        self.emit(f'[ {" ".join(body_code + next_code)} ]')  # Loop body and increment
         self.emit('WHILE')
+
+        self.emit('BREAK_FLAG DROP')  # Cleanup BREAK_FLAG
 
     def visit_FuncCall(self, node):
         """

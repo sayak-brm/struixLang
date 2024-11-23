@@ -194,6 +194,27 @@ struixC supports a subset of the C programming language. Below are the key featu
     }
     ```
 
+- **Switch Statements**:
+
+  ```c
+  switch (variable) {
+      case value1:
+          // Code block
+          break;  // Terminates the case
+      case value2:
+          // Code block
+          break;  // Terminates the case
+      default:
+          // Default code block
+          break;  // Terminates the switch
+  }
+  ```
+
+  Switch statements are supported with `break` statements terminating cases effectively:
+
+  - When a `break` is encountered, remaining cases are skipped.
+  - The `default` block is executed only if no prior case matched.
+
 - **Loops**:
 
   - `for` loop:
@@ -201,6 +222,9 @@ struixC supports a subset of the C programming language. Below are the key featu
     ```c
     for (initialization; condition; increment) {
       // Code block
+      if (break_condition) {
+        break;  // Terminates the loop
+      }
     }
     ```
 
@@ -209,6 +233,9 @@ struixC supports a subset of the C programming language. Below are the key featu
     ```c
     while (condition) {
       // Code block
+      if (break_condition) {
+        break;  // Terminates the loop
+      }
     }
     ```
 
@@ -217,6 +244,9 @@ struixC supports a subset of the C programming language. Below are the key featu
     ```c
     do {
       // Code block
+      if (break_condition) {
+        break;  // Terminates the loop
+      }
     } while (condition);
     ```
 

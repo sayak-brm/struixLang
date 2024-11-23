@@ -249,6 +249,8 @@ struixLang uses **postfix notation** (Reverse Polish Notation) for operations.
 
 ### Logical Operations
 
+Logical operations in struixLang work with boolean values (`true` and `false`).
+
 - **NOT**: Logical NOT operation.
 
   ```plaintext
@@ -265,6 +267,27 @@ struixLang uses **postfix notation** (Reverse Polish Notation) for operations.
 
   ```plaintext
   true false or print  # Outputs True
+  ```
+
+- **NAND**: Logical NAND operation. Returns the negation of `AND`.
+
+  ```plaintext
+  true false nand print  # Outputs True
+  true true nand print   # Outputs False
+  ```
+
+- **NOR**: Logical NOR operation. Returns the negation of `OR`.
+
+  ```plaintext
+  true false nor print   # Outputs False
+  false false nor print  # Outputs True
+  ```
+
+- **XOR**: Logical XOR operation. Returns `true` if one operand is true and the other is false.
+
+  ```plaintext
+  true false xor print   # Outputs True
+  true true xor print    # Outputs False
   ```
 
 ### Bitwise Operations
@@ -323,6 +346,24 @@ struixLang uses **postfix notation** (Reverse Polish Notation) for operations.
 
   ```plaintext
   "Hello, World!" 7 12 substr print  # Outputs "World"
+  ```
+
+#### Multiline Strings
+
+- Multiline strings are enclosed in triple quotes (`"""` or `'''`).
+- They allow for more readable code when dealing with long text or multiline outputs.
+
+  ```plaintext
+  """This is a 
+  multiline string""" print
+  ```
+
+- Multiline strings can also contain embedded newlines or special characters without requiring explicit escape sequences:
+
+  ```plaintext
+  """Line 1
+  Line 2
+  Line 3""" print
   ```
 
 ### Lists and Arrays
@@ -515,7 +556,7 @@ struixLang uses **postfix notation** (Reverse Polish Notation) for operations.
 
 ## Examples
 
-### Hello, World!
+### Hello, World
 
 ```plaintext
 "Hello, World!" print
