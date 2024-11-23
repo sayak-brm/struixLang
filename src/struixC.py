@@ -4,7 +4,7 @@ from pycparser import c_parser, c_ast
 class CompilationError(Exception):
     pass
 
-class ToyLangCompiler(c_ast.NodeVisitor):
+class StruixCC(c_ast.NodeVisitor):
     def __init__(self):
         self.output = []
         self.symbol_table = {}  # To keep track of variables, their types, and scopes
@@ -167,14 +167,14 @@ class ToyLangCompiler(c_ast.NodeVisitor):
         self.visit(node.cond)
 
         # True branch
-        true_branch_compiler = ToyLangCompiler()
+        true_branch_compiler = StruixCC()
         true_branch_compiler.symbol_table = self.symbol_table.copy()
         true_branch_compiler.visit(node.iftrue)
         true_branch_code = true_branch_compiler.output
 
         # False branch
         if node.iffalse:
-            false_branch_compiler = ToyLangCompiler()
+            false_branch_compiler = StruixCC()
             false_branch_compiler.symbol_table = self.symbol_table.copy()
             false_branch_compiler.visit(node.iffalse)
             false_branch_code = false_branch_compiler.output
@@ -199,7 +199,7 @@ class ToyLangCompiler(c_ast.NodeVisitor):
         self.emit('SWITCH_EXPR STORE')
 
         # Process cases
-        case_compiler = ToyLangCompiler()
+        case_compiler = StruixCC()
         case_compiler.symbol_table = self.symbol_table.copy()
         case_compiler.switch_cases = []
         case_compiler.visit(node.stmt)
@@ -236,7 +236,7 @@ class ToyLangCompiler(c_ast.NodeVisitor):
         case_value = self.evaluate_constant(node.expr)  # Case value
 
         # Case body
-        case_body_compiler = ToyLangCompiler()
+        case_body_compiler = StruixCC()
         case_body_compiler.symbol_table = self.symbol_table.copy()
         for stmt in node.stmts or []:
             case_body_compiler.visit(stmt)
@@ -249,7 +249,7 @@ class ToyLangCompiler(c_ast.NodeVisitor):
 
     def visit_Default(self, node):
         # Default case
-        default_body_compiler = ToyLangCompiler()
+        default_body_compiler = StruixCC()
         default_body_compiler.symbol_table = self.symbol_table.copy()
         for stmt in node.stmts or []:
             default_body_compiler.visit(stmt)
@@ -265,13 +265,13 @@ class ToyLangCompiler(c_ast.NodeVisitor):
     # Visit while loops
     def visit_While(self, node):
         # Condition code
-        cond_compiler = ToyLangCompiler()
+        cond_compiler = StruixCC()
         cond_compiler.symbol_table = self.symbol_table.copy()
         cond_compiler.visit(node.cond)
         cond_code = cond_compiler.output
 
         # Loop body code
-        body_compiler = ToyLangCompiler()
+        body_compiler = StruixCC()
         body_compiler.symbol_table = self.symbol_table.copy()
         body_compiler.visit(node.stmt)
         body_code = body_compiler.output
@@ -284,13 +284,13 @@ class ToyLangCompiler(c_ast.NodeVisitor):
     # Visit do-while loops
     def visit_DoWhile(self, node):
         # Condition code
-        cond_compiler = ToyLangCompiler()
+        cond_compiler = StruixCC()
         cond_compiler.symbol_table = self.symbol_table.copy()
         cond_compiler.visit(node.cond)
         cond_code = cond_compiler.output
 
         # Loop body code
-        body_compiler = ToyLangCompiler()
+        body_compiler = StruixCC()
         body_compiler.symbol_table = self.symbol_table.copy()
         body_compiler.visit(node.stmt)
         body_code = body_compiler.output
@@ -307,7 +307,7 @@ class ToyLangCompiler(c_ast.NodeVisitor):
             self.visit(node.init)
 
         # Condition code
-        cond_compiler = ToyLangCompiler()
+        cond_compiler = StruixCC()
         cond_compiler.symbol_table = self.symbol_table.copy()
         if node.cond:
             cond_compiler.visit(node.cond)
@@ -317,14 +317,14 @@ class ToyLangCompiler(c_ast.NodeVisitor):
         cond_code = cond_compiler.output
 
         # Next (increment)
-        next_compiler = ToyLangCompiler()
+        next_compiler = StruixCC()
         next_compiler.symbol_table = self.symbol_table.copy()
         if node.next:
             next_compiler.visit(node.next)
         next_code = next_compiler.output
 
         # Loop body code
-        body_compiler = ToyLangCompiler()
+        body_compiler = StruixCC()
         body_compiler.symbol_table = self.symbol_table.copy()
         body_compiler.visit(node.stmt)
         body_code = body_compiler.output
@@ -465,13 +465,13 @@ class ToyLangCompiler(c_ast.NodeVisitor):
         self.visit(node.cond)
 
         # True expression
-        true_compiler = ToyLangCompiler()
+        true_compiler = StruixCC()
         true_compiler.symbol_table = self.symbol_table.copy()
         true_compiler.visit(node.iftrue)
         true_code = true_compiler.output
 
         # False expression
-        false_compiler = ToyLangCompiler()
+        false_compiler = StruixCC()
         false_compiler.symbol_table = self.symbol_table.copy()
         false_compiler.visit(node.iffalse)
         false_code = false_compiler.output
@@ -486,6 +486,15 @@ class ToyLangCompiler(c_ast.NodeVisitor):
         node_name = type(node).__name__
         self.warning(f"Unsupported node type '{node_name}'. Node will be ignored.")
         # Optionally, you can call super().generic_visit(node) to traverse children
+
+    def visit_FileAST(self, node):
+        """
+        Visit the root of the AST, which is the FileAST node. It processes
+        all top-level declarations like functions and global variables.
+        """
+        for ext in node.ext:
+            self.visit(ext)
+
 
 # Example usage
 if __name__ == '__main__':
@@ -504,7 +513,7 @@ if __name__ == '__main__':
     }
     '''
 
-    compiler = ToyLangCompiler()
+    compiler = StruixCC()
     try:
         toy_code = compiler.compile(c_code)
         print(toy_code)
