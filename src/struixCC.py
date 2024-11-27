@@ -110,12 +110,12 @@ class StruixCC(c_ast.NodeVisitor):
 
         # Process parameters
         if isinstance(node.decl.type, c_ast.FuncDecl) and node.decl.type.args:
-            for param in node.decl.type.args.params:
+            for param in reversed(node.decl.type.args.params):
                 var_name = param.name
                 var_type = self.get_type(param.type)
                 self.symbol_table[var_name] = var_type
                 self.emit(f'VAR {var_name}')
-                self.emit(f'{var_name} STORE')
+                self.emit(f'{var_name} PARAM')
 
         # Visit function body
         self.visit(node.body)
@@ -162,7 +162,7 @@ class StruixCC(c_ast.NodeVisitor):
             array_size = self.get_array_size(node.type)
             self.symbol_table[var_name] = ('array', array_size)
             self.emit(f'VAR {var_name}')
-            self.emit(f'[ {"0 " * array_size}] {var_name} STORE')  # Initialize array with zeros
+            self.emit(f'[ {"0 " * array_size}] {var_name} SWAP STORE')  # Initialize array with zeros
             if node.init:
                 self.warning(f"Array initialization not fully supported for {var_name}.")
         else:
@@ -171,7 +171,7 @@ class StruixCC(c_ast.NodeVisitor):
                 self.emit(f'VAR {var_name}')
                 if node.init:
                     self.visit(node.init)
-                    self.emit(f'{var_name} STORE')
+                    self.emit(f'{var_name} SWAP STORE')
 
     def get_array_size(self, array_decl):
         """
@@ -206,7 +206,7 @@ class StruixCC(c_ast.NodeVisitor):
                 # Assume int type if undeclared
                 self.symbol_table[var_name] = 'int'
                 self.emit(f'VAR {var_name}')
-            self.emit(f'{var_name} STORE')
+            self.emit(f'{var_name} SWAP STORE')
         elif isinstance(node.lvalue, c_ast.ArrayRef):
             # Handle array element assignment
             self.visit(node.lvalue.name)       # Array variable
@@ -269,12 +269,18 @@ class StruixCC(c_ast.NodeVisitor):
     def visit_Return(self, node):
         """
         Visit a return statement node and compile it.
-        
+
         Parameters:
             node (c_ast.Return): The return statement node.
         """
-        self.visit(node.expr)
-        # In a stack-based language, leaving the result on the stack is sufficient
+        if node.expr:
+            # Compile the return expression
+            self.visit(node.expr)
+        else:
+            # For void returns, push None onto the stack
+            self.emit('None')
+        # Emit the RETURN keyword to signal function exit
+        self.emit('RETURN')
 
     def visit_If(self, node):
         """
@@ -318,11 +324,11 @@ class StruixCC(c_ast.NodeVisitor):
         # Store the switch expression in a variable
         self.visit(node.cond)
         self.emit('VAR SWITCH_EXPR')
-        self.emit('SWITCH_EXPR STORE')
+        self.emit('SWITCH_EXPR SWAP STORE')
 
         # Initialize BREAK_FLAG
         self.emit('VAR BREAK_FLAG')
-        self.emit('RESET_BREAK_FLAG')  # Initially set to False
+        self.emit('BREAK_FLAG FALSE STORE')  # Initially set to False
 
         # Process cases
         self.case_blocks = []
@@ -346,10 +352,6 @@ class StruixCC(c_ast.NodeVisitor):
             self.emit(f'[ {" ".join(self.default_block)} ]')
             self.emit('IFTRUE')
 
-        # Cleanup switch variables
-        self.emit('SWITCH_EXPR DROP')
-        self.emit('BREAK_FLAG DROP')
-
     def visit_Case(self, node):
         """
         Visit a case label and compile its body.
@@ -365,9 +367,6 @@ class StruixCC(c_ast.NodeVisitor):
         case_body_compiler.symbol_table = self.symbol_table.copy()
         for stmt in node.stmts or []:
             case_body_compiler.visit(stmt)
-
-        # Append `SET_BREAK_FLAG` at the end of the case
-        case_body_compiler.emit_flag_set('BREAK_FLAG')
 
         # Append case block
         self.case_blocks.append((case_value, case_body_compiler.output))
@@ -385,26 +384,23 @@ class StruixCC(c_ast.NodeVisitor):
         for stmt in node.stmts or []:
             default_body_compiler.visit(stmt)
 
-        # Append `SET_BREAK_FLAG` at the end of the default
-        default_body_compiler.emit_flag_set('BREAK_FLAG')
-
         # Store the default block
         self.default_block = default_body_compiler.output
 
     def emit_flag_reset(self, flag_name):
         """Helper to reset a flag"""
-        self.emit(f'FALSE {flag_name} STORE')
+        self.emit(f'{flag_name} FALSE STORE')
 
     def emit_flag_set(self, flag_name):
         """Helper to set a flag"""
-        self.emit(f'TRUE {flag_name} STORE')
+        self.emit(f'{flag_name} TRUE STORE')
 
     def visit_Break(self, node):
-        self.emit('SET_BREAK_FLAG')  # Emit code to set the BREAK_FLAG
+        self.emit_flag_set('BREAK_FLAG')  # Emit code to set the BREAK_FLAG
 
     def visit_Continue(self, node):
         """Handle continue statements by setting CONTINUE_FLAG"""
-        self.emit('SET_CONTINUE_FLAG')  # Emit code to set the CONTINUE_FLAG
+        self.emit_flag_set('CONTINUE_FLAG')  # Emit code to set the CONTINUE_FLAG
 
     def evaluate_constant(self, node):
         """
@@ -444,8 +440,8 @@ class StruixCC(c_ast.NodeVisitor):
         # Declare and reset control flags
         self.emit('VAR BREAK_FLAG')           # Declare BREAK_FLAG
         self.emit('VAR CONTINUE_FLAG')        # Declare CONTINUE_FLAG
-        self.emit('RESET_BREAK_FLAG')         # Initialize BREAK_FLAG to False
-        self.emit('RESET_CONTINUE_FLAG')      # Initialize CONTINUE_FLAG to False
+        self.emit('BREAK_FLAG FALSE STORE')         # Initialize BREAK_FLAG to False
+        self.emit('CONTINUE_FLAG FALSE STORE')      # Initialize CONTINUE_FLAG to False
 
         # Modify the loop condition to include BREAK_FLAG
         self.emit(f'[ {" ".join(cond_code)} BREAK_FLAG FETCH NOT AND ]')
@@ -456,12 +452,12 @@ class StruixCC(c_ast.NodeVisitor):
             [
                 {" ".join(body_code)}
             ] IFTRUE
-            RESET_CONTINUE_FLAG
+            CONTINUE_FLAG FALSE STORE
         ] WHILE''')
 
         # Cleanup flags after the loop
         self.emit('BREAK_FLAG DROP')
-        self.emit('CONTINUE_FLAG DROP')
+        self.emit('CONTINUE_FLAG CONTINUE_FLAG DROP')
 
     def visit_DoWhile(self, node):
         """
@@ -484,8 +480,8 @@ class StruixCC(c_ast.NodeVisitor):
         self.emit_flag_reset('BREAK_FLAG')  # Initialize BREAK_FLAG to False
 
         # Combine loop body and condition with BREAK_FLAG
-        self.emit(f'[ {" ".join(body_code)} BREAK_FLAG FETCH NOT AND ]')  # Body execution with BREAK_FLAG
-        self.emit(f'[ {" ".join(cond_code)} ]')  # Loop condition
+        self.emit(f'[ {" ".join(cond_code)} BREAK_FLAG FETCH NOT AND ]')  # Body execution with BREAK_FLAG
+        self.emit(f'[ {" ".join(body_code)} ]')  # Loop condition
         self.emit('DOWHILE')
 
         self.emit('BREAK_FLAG DROP')  # Cleanup BREAK_FLAG
@@ -520,14 +516,14 @@ class StruixCC(c_ast.NodeVisitor):
         # Emit WHILE loop with BREAK_FLAG and CONTINUE_FLAG
         self.emit('VAR BREAK_FLAG')  # Declare BREAK_FLAG
         self.emit('VAR CONTINUE_FLAG')  # Declare CONTINUE_FLAG
-        self.emit('RESET_BREAK_FLAG')  # Initialize BREAK_FLAG to False
-        self.emit('RESET_CONTINUE_FLAG')  # Initialize CONTINUE_FLAG to False
+        self.emit('BREAK_FLAG FALSE STORE')  # Initialize BREAK_FLAG to False
+        self.emit('CONTINUE_FLAG FALSE STORE')  # Initialize CONTINUE_FLAG to False
 
         # Modify condition to include BREAK_FLAG
         self.emit(f'[ {" ".join(cond_code)} BREAK_FLAG FETCH NOT AND ]')
 
         # Modify body to include CONTINUE_FLAG and increment
-        self.emit(f'[ CONTINUE_FLAG FETCH NOT [ {" ".join(body_code + next_code)} RESET_CONTINUE_FLAG ] IFTRUE ]')
+        self.emit(f'[ CONTINUE_FLAG FETCH NOT [ {" ".join(body_code + next_code)} CONTINUE_FLAG FALSE STORE ] IFTRUE ]')
         self.emit('WHILE')
 
         # Cleanup flags
@@ -643,7 +639,7 @@ class StruixCC(c_ast.NodeVisitor):
         """
         var_name = self.get_variable_name(expr)
         if var_name:
-            self.emit(f'{var_name} STORE')
+            self.emit(f'{var_name} SWAP STORE')
         else:
             self.error("Unsupported expression for increment/decrement.")
 

@@ -30,7 +30,7 @@ def run_test_case(index=None):
 
     # Run the test cases
     for idx, test in selected_cases:
-        print(f"Test Case {idx}: {test['description']}")
+        print(f"Test Case {idx}: {test['description']}, Code:\n{test['code']}")
         compiler = StruixCC()  # Initialize the compiler for each test case
         try:
             # Compile the C code
@@ -44,7 +44,9 @@ def run_test_case(index=None):
 
             # Define a function to capture the return value of 'main'
             def capture_return():
+                # Run the compiled code
                 terp.run(sx_code)
+                terp.run('main PSTACK')
                 # Fetch the return value of 'main' from the stack
                 if terp.stack:
                     return terp.stack.pop()
@@ -52,7 +54,7 @@ def run_test_case(index=None):
                     return None
 
             # Execute the code and capture the return value
-            print("Executing Toy Code:")
+            print("Executing struixLang Code:")
             result = capture_return()
             expected = test['output']
 
@@ -62,6 +64,7 @@ def run_test_case(index=None):
             else:
                 print(f"Test Case {idx} Failed!")
                 print(f"Expected Output: {expected}, Actual Output: {result}")
+                raise ValueError(f"Test Case {idx}: {test['description']} Failed! Expected Output: {expected}, Actual Output: {result}")
 
             print("-" * 40)
         except CompilationError as e:
@@ -73,8 +76,10 @@ def run_test_case(index=None):
             else:
                 print(f"Test Case {idx} Failed!")
                 print(f"Expected Output: {expected}, Error during compilation: {error_message}")
+        except ValueError: pass
         except Exception as e:
             print(f"Execution failed with exception: {e}")
+            print(f"Near line: {terp.lexer.line_number}, column: {terp.lexer.column_number}")
             print("-" * 40)
             break
 

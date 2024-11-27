@@ -1,7 +1,78 @@
-DEF += DUP FETCH NEXT + STORE END
-DEF -= DUP FETCH NEXT - STORE END
-DEF *= DUP FETCH NEXT * STORE END
-DEF /= DUP FETCH NEXT / STORE END
-DEF **= DUP FETCH NEXT ** STORE END
-DEF //= DUP FETCH NEXT // STORE END
-DEF %= DUP FETCH NEXT % STORE END
+IMPORT struixCC
+
+# Add and Assign (+=)
+DEF +=
+VAR value
+value PARAM
+VAR variable
+variable PARAM
+variable FETCH      # Fetch the current value
+value FETCH DUP     # Fetch the value to be added, duplicate the stack
++ STORE             # Perform addition and store the result back
+END
+
+# Subtract and Assign (-=)
+DEF -=
+VAR value
+value PARAM
+VAR variable
+variable PARAM
+variable FETCH      # Fetch the current value
+value FETCH DUP     # Fetch the value to be subtracted, duplicate the stack
+- STORE             # Perform subtraction and store the result back
+END
+
+# Multiply and Assign (*=)
+DEF *=
+VAR value
+value PARAM
+VAR variable
+variable PARAM
+variable FETCH      # Fetch the current value
+value FETCH DUP     # Fetch the value to multiply with, duplicate the stack
+* STORE             # Perform multiplication and store the result back
+END
+
+# Divide and Assign (/=)
+DEF /=
+VAR value
+value PARAM
+VAR variable
+variable PARAM
+variable FETCH      # Fetch the current value
+value FETCH DUP     # Fetch the value to divide by, duplicate the stack
+/ STORE             # Perform division and store the result back
+END
+
+# Exponentiate and Assign (**=)
+DEF **=
+VAR value
+value PARAM
+VAR variable
+variable PARAM
+variable FETCH      # Fetch the current value
+value FETCH DUP     # Fetch the exponent value, duplicate the stack
+** STORE            # Perform exponentiation and store the result back
+END
+
+# Floor Divide and Assign (//=)
+DEF //=
+VAR value
+value PARAM
+VAR variable
+variable PARAM
+variable FETCH      # Fetch the current value
+value FETCH DUP     # Fetch the divisor, duplicate the stack
+// STORE            # Perform floor division and store the result back
+END
+
+# Modulo and Assign (%=)
+DEF %=
+VAR value
+value PARAM
+VAR variable
+variable PARAM
+variable FETCH      # Fetch the current value
+value FETCH DUP     # Fetch the divisor, duplicate the stack
+% STORE             # Perform modulo operation and store the result back
+END

@@ -2,6 +2,31 @@
 
 ---
 
+### Refined Immediate Word Handling and Unified Scope Management (27/11/2024)
+
+**Overview:**
+
+- **Immediate Word Behavior:**
+  - Immediate word termination (`DEF`...`END`) is unified under the `END` keyword, deprecating the need for `IMMEND`. This simplification enables handling of both regular and immediate words seamlessly.
+
+- **Scope Management:**
+  - Introduced `newBlockScope` and `newAotScope` methods for consistent management of runtime and AOT workflows.
+  - Replaced the legacy compile stack model with a unified scoped stack and dictionary structure.
+
+- **Error Handling:**
+  - Improved error reporting for undefined symbols or misuse of immediate words during runtime or preprocessing.
+
+- **Removed Features:**
+  - Removed `IMMEND` as `END` now handles all cases.
+
+**Impact:**
+
+- Enhanced predictability and reduced complexity for immediate word handling.
+- Simplified syntax for users with the removal of `IMMEND`.
+- Improved debugging and error tracking through refined error handling.
+
+---
+
 ### Enhance struixLang functionality and refactor modules for clarity (23/11/2024)
 
 **Overview:**

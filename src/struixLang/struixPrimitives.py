@@ -1,5 +1,9 @@
 ##   Copyright 2016-2024 Sayak Brahmachari
  
+from multiprocessing import Value
+import types
+
+
 class AddWords:
     ''' Provides Built-in Words for the struixLang Interpreter. '''
     def __init__(self, terp, ENABLE_UNSAFE_OPERATIONS = False, wordSets = None):
@@ -38,38 +42,54 @@ class AddWords:
     @staticmethod
     def makeWord(code, imm=False):
         ''' Makes an executable word from list. '''
+        # if imm:
+        #     print(imm, code)
         def word(terp):
-            ''' Template for a list executor. '''
-            import types
+            ''' Template for a word list executor. '''
+
+            ret_val = None
+            # if terp.isCompiling():
+            #     terp.newAotScope()
+            # else:
+            terp.newBlockScope()
+
             if isinstance(code, list):
                 pointer = 0
                 while pointer < len(code):
                     if imm:
-                        i = code[pointer].__dict__.get('immediate', False)
+                        i = getattr(code[pointer], '__dict__', {}).get('immediate', False)
                         terp.immediate = i
                     terp.interpret(code[pointer])
                     pointer += 1
             elif isinstance(code, (types.FunctionType, types.MethodType)):
                 code(terp)
             else:
-                raise TypeError('Expected List')
+                raise TypeError('Invalid callable type, expected word or list.')
+
+            dataStack = terp.popScope()
+            ret_val = None
+
+            # Place the return value onto the stack (None if void return)
+            if len(dataStack) > 0:
+                ret_val = dataStack.pop()
+            terp.stack.append(ret_val)
+
         return word
 
     @staticmethod
-    def getVal(terp, val, lvl):
+    def evalExpr(terp, val):
         ''' Parses and gets next value from lexer. '''
         import types
+        lvl = terp.getScopeDepth()
         val = terp.compile(val)
-        if isinstance(val, (types.FunctionType, types.MethodType)):
+        if isinstance(val, (types.FunctionType, types.MethodType)) and not val.__dict__.get('dehydrated', False):
             ''' Evaluates before accepting. '''
             val(terp)
-            while len(terp.compileStack) > lvl:
+            while terp.getScopeDepth() > lvl:
                 word = terp.lexer.nextWord()
                 terp.interpret(terp.compile(word))
             if len(terp.stack) < 1:
-                while len(terp.compileStack) > lvl:
-                    terp.compileStack.pop()
-                raise SyntaxError('Invalid Syntax.')
+                raise ValueError('Expression does not yield a value.')
             val = terp.stack.pop()
         return val
 
@@ -85,7 +105,7 @@ class AddWords:
             ''' Displays the complete stack. '''
             stackList = terp.stack[:]
             stackList.reverse()
-            print('\n'.join(repr(val) for val in stackList))
+            print('\n'.join(f" -> {repr(val)}" for val in stackList))
         def INPUT(terp):
             ''' Accepts value from user. '''
             val = input()
@@ -130,7 +150,9 @@ class AddWords:
                     raise IndexError('Not enough items on stack.')
                 n1 = terp.stack.pop()
                 n2 = terp.stack.pop()
-                terp.stack.append(eval('n2 {} n1'.format(op)))
+                expr = '{} {} {}'.format(n2, op, n1)
+                result = eval(expr)
+                terp.stack.append(result)
             return CALC
 
         # Binary operations
@@ -207,21 +229,43 @@ class AddWords:
 
     def words4values(self):
         ''' Provides support for variables and constants. '''
+        class Variable:
+            ''' Provides a template class for variables. '''
+            def __init__(self, val=None, name=None):
+                ''' Initializes a Variable object. '''
+                self.val = val
+                self.name = name
+            def access(self, terp):
+                ''' Puts a reference to the variable value on the stack. '''
+                terp.stack.append(self)
+
         def VAR(terp):
             ''' Provides creation of variables. '''
-            class Variable:
-                ''' Provides a template class for variables. '''
-                def __init__(self, val=None):
-                    ''' Initializes a Variable object. '''
-                    self.val = val
-                def access(self, terp):
-                    ''' Puts a reference to the variable value on the stack. '''
-                    terp.stack.append(self)
             name = terp.lexer.nextWord()
             if name == '':
                 raise SyntaxError('Invalid Syntax')
-            var = Variable()
-            terp.define(name, var.access)
+            var = Variable(name=name)
+            terp.define(name, var.access, False)
+
+        def PARAM(terp):
+            ''' Provides creation of function parameters by getting the value highest in the global scopes. '''
+            flag = True
+            if (scopeDepth := terp.getScopeDepth()) < 2:
+                raise SyntaxError('Invalid Syntax, parameters cannot be set for global scope.')
+            scopeDepth -= 1
+            while scopeDepth > -1:
+                scopeDepth -= 1
+                if len((scopedStack := terp.scopedStacks[scopeDepth])) < 1:
+                    continue
+                val = scopedStack.pop()
+                flag = False
+
+                if len(terp.stack) < 1:
+                    raise IndexError('Not enough items on stack.')
+                ref = terp.stack.pop()
+                ref.val = val
+            if flag:
+                raise ValueError(f'Function parameter missing')
 
         def CONST(terp):
             ''' Provides creation of constants. '''
@@ -240,12 +284,11 @@ class AddWords:
                     # terp.stack.append(self.val)
                     terp.stack.append(getattr(self, 'val'))
             name = terp.lexer.nextWord()
-            lvl = len(terp.compileStack)
-            val = self.getVal(terp, terp.lexer.nextWord(), lvl)
+            val = self.evalExpr(terp, terp.lexer.nextWord())
             if name == '' or val == '':
-                raise SyntaxError('Invalid Syntax')
-            elif name in terp.dictionary:
-                raise SyntaxError('Constant value set')
+                raise SyntaxError('Invalid Syntax: Malformed constant definition.')
+            elif terp.lookup(name) is not None:
+                raise SyntaxError(f'Constant {name} already exists and cannot be redefined.')
             const = Constant(val)
             terp.define(name, const.access)
 
@@ -253,9 +296,8 @@ class AddWords:
             ''' Helps storing values to variables. (INFIX) '''
             nxt = terp.lexer.nextWord()
             if nxt == '':
-                raise SyntaxError('Invalid Syntax')
-            lvl = len(terp.compileStack)
-            val = self.getVal(terp, nxt, lvl)
+                raise SyntaxError('Invalid Syntax: Malformed assignment.')
+            val = self.evalExpr(terp, nxt)
             def helper(terp):
                 if len(terp.stack) < 1:
                     raise IndexError('Not enough items on stack.')
@@ -289,7 +331,8 @@ class AddWords:
             "CONST": CONST,
             "FETCH": FETCH,
             "=":     ASSIGN,
-            "STORE": STORE
+            "STORE": STORE,
+            "PARAM": PARAM
             }
 
     @staticmethod
@@ -343,40 +386,52 @@ class AddWords:
             name = terp.lexer.nextWord()
             if name == '':
                 raise SyntaxError('Invalid Syntax')
-            terp.newWord = name
-            terp.startCompile()
+            if terp.isCompiling():
+                terp.wordNameStack.append("")
+            else:
+                terp.wordNameStack.append(name)
+            terp.newAotScope()
         def END(terp):
             ''' Marks end of user-defined words. '''
-            if terp.immediate_compiled: return IMMEND(terp)
-            code = terp.stopCompile()
-            terp.define(terp.newWord, self.makeWord(code))
-            terp.newWord = None
+            # if terp.immediate_compiled:
+            #     print('WARNING: Immediate words detected, switching END to IMMEND.')
+            #     return IMMEND(terp)
+            name = terp.wordNameStack.pop()
+            code = terp.popScope()
+            if name != "":
+                terp.define(name, self.makeWord(code))
         def IMMEND(terp):
             ''' Marks end of immediate user-defined words. '''
-            code = terp.stopCompile()
+            code = terp.popScope()
             word = self.makeWord(code, True)
             word.__dict__['immediate'] = True
-            terp.define(terp.newWord, word)
-            terp.newWord = None
+            terp.define(terp.wordNameStack.pop(), word)
         def NEXT(terp):
             ''' Appends next word to stack and skips it during execution. '''
             def helper(terp):
-                lvl = len(terp.compileStack)
                 nxt = terp.lexer.nextWord()
-                val = self.getVal(terp, nxt, lvl)
+                val = self.evalExpr(terp, nxt)
                 terp.stack.append(val)
             helper.__dict__['immediate'] = True
-            if terp.newWord == None:
+            if len(terp.wordNameStack) == 0:
+                # If not in fn definition, execute the word
                 helper(terp)
             else:
+                # If in fn definition, append the word into fn word definition
                 terp.stack.append(helper)
+        def RETURN(terp):
+            ''' Exits the function and returns a value. '''
+            if len(terp.stack) < 1:
+                # If no value is provided, return None
+                raise ValueError('No value provided.')
         NEXT.__dict__['immediate'] = True
         DEF.__dict__['immediate'] = True
         END.__dict__['immediate'] = True
         return {
             "DEF":  DEF,
             "END":  END,
-            "NEXT": NEXT
+            "NEXT": NEXT,
+            "RETURN": RETURN
             }
 
     @staticmethod
@@ -384,11 +439,11 @@ class AddWords:
         ''' Words for list management. '''
         def LIST(terp):
             ''' Creates a list. '''
-            terp.startCompile()
+            terp.newAotScope()
         def LIST_END(terp):
             ''' Marks end of list. '''
             lst = []
-            lst += terp.stopCompile()
+            lst += terp.popScope()
             terp.stack.append(lst)
         def LENGTH(terp):
             ''' Gives the length of a list. '''
@@ -406,9 +461,9 @@ class AddWords:
             ''' Stores a value in a list at a given index '''
             if len(terp.stack) < 3:
                 raise IndexError('Not enough items on stack.')
-            value = terp.stack.pop()
             index = terp.stack.pop()
             lst = terp.stack.pop()
+            value = terp.stack.pop()
             lst[index] = value
             terp.stack.append(lst)
         LIST.__dict__['immediate'] = True
@@ -477,7 +532,8 @@ class AddWords:
             if len(terp.stack) < 2:
                 raise IndexError('Not enough items on stack.')
             code = terp.stack.pop()
-            if terp.stack.pop():
+            cond = terp.stack.pop()
+            if cond:
                 terp.interpret(self.makeWord(code))
 
         def IFFALSE(terp):
