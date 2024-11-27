@@ -22,7 +22,7 @@ DEF MAP
     lst STORE
     lst FETCH LENGTH VAR len len STORE
     VAR idx 0 idx STORE
-    VAR result []
+    VAR result [ ]
     result STORE
     [ idx FETCH len FETCH < ]  # Condition
     [
