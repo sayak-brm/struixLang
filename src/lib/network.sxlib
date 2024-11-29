@@ -1,0 +1,15 @@
+DEF HTTP_GET
+    PYIMPORT 'requests'
+    PYEXEC 'terp.stack.append(requests.get(terp.stack.pop()).text)'
+END
+
+DEF HTTP_POST
+    SWAP
+    PYIMPORT 'requests'
+    PYEXEC '''
+url = terp.stack.pop()
+data = terp.stack.pop()
+response = requests.post(url, data=data)
+terp.stack.append(response.text)
+'''
+END

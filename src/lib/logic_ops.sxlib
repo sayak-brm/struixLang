@@ -1,0 +1,11 @@
+DEF NAND
+    AND
+    NOT
+END
+
+DEF NOR
+    OR
+    NOT
+END
+
+DEF XOR ^ END

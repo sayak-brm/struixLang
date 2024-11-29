@@ -1,0 +1,24 @@
+DEF SHL
+    SWAP
+    <<
+END
+
+DEF SHR
+    SWAP
+    >>
+END
+
+DEF BITAND
+    SWAP OVER
+    &
+END
+
+DEF BITOR
+    SWAP OVER
+    |
+END
+
+DEF BITXOR
+    SWAP OVER
+    ^
+END

@@ -54,3 +54,106 @@ altDocs/~$ruixLang.docx
 docs/docs/~$ruixLang.docx
 partpy/*
 .vscode/*
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+*.cover
+*.py,cover
+.cache
+nosetests.xml
+coverage.xml
+*.lcov
+
+# MyPy type checking reports
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type checker
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Environments
+*.env
+*.env.*
+.envrc
+*.rc
+
+# IDE / Editor settings
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# macOS metadata
+.DS_Store
+
+# Windows metadata
+Thumbs.db
+ehthumbs.db
+
+# JetBrains IDE temp files
+*.iml
+out/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# SQLite database files
+*.sqlite3
+
+# Logs
+*.log
+
+# Local config and credentials
+*.config
+*.secret
+
+# Temporary files and backups
+*.tmp
+*.bak
+*.swp
+*.swo
+*.~undo-tree
+*.orig
+
+# Compiled source code for virtual environments
+venv/
+
+# Package manager lockfiles (optional, depends on workflow)
+poetry.lock
+Pipfile.lock

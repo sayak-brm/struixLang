@@ -1,0 +1,16 @@
+DEF STRCAT
+    SWAP OVER
+    +
+END
+
+DEF STRLEN
+    DUP FETCH
+    PYEXEC 'terp.stack.append(len(terp.stack.pop()))'
+END
+
+DEF SUBSTR
+    SWAP OVER
+    NEXT  # start index
+    NEXT  # end index
+    PYEXEC 's = terp.stack.pop(); start = terp.stack.pop(); end = terp.stack.pop(); terp.stack.append(s[start:end])'
+END

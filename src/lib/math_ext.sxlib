@@ -1,0 +1,24 @@
+DEF SIN
+    PYIMPORT 'math'
+    PYEXEC 'terp.stack.append(math.sin(terp.stack.pop()))'
+END
+
+DEF COS
+    PYIMPORT 'math'
+    PYEXEC 'terp.stack.append(math.cos(terp.stack.pop()))'
+END
+
+DEF TAN
+    PYIMPORT 'math'
+    PYEXEC 'terp.stack.append(math.tan(terp.stack.pop()))'
+END
+
+DEF LOG
+    PYIMPORT 'math'
+    PYEXEC 'terp.stack.append(math.log(terp.stack.pop()))'
+END
+
+DEF EXP
+    PYIMPORT 'math'
+    PYEXEC 'terp.stack.append(math.exp(terp.stack.pop()))'
+END
