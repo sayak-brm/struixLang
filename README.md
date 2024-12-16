@@ -136,7 +136,9 @@ python struixCC.py -x example.c
 
 ## Documentation and Examples
 
-Detailed documentation, including syntax, primitives, and examples, is available [here](https://github.com/sayak-brm/struixLang/blob/struixC/docs/index.md).
+Detailed documentation, including syntax, primitives, and examples, is available [here](https://sayak-brm.github.io/struixLang/docs/).
+
+Documentation for struixCC is available [here](https://sayak-brm.github.io/struixLang/docs/struixCC).
 
 ### Example: struixLang Program
 
@@ -156,9 +158,9 @@ b FETCH                 # Fetch b
 RETURN                  # Return b
 ```
 
-Example: C Program Compiled with struixCC
+### Example: C Program Compiled with struixCC
 
-Input (example.c):
+#### Input (example.c):
 
 ```c
 // Example: While loop summing numbers
@@ -178,7 +180,7 @@ int main() {
 }
 ```
 
-Output (example.sx):
+#### Output (example.sx):
 
 > Comments added later for clarity.
 
