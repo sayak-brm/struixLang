@@ -1,4 +1,4 @@
-# struixC Coding Guide
+# struixCC Coding Guide
 
 ## Table of Contents
 
@@ -33,9 +33,9 @@
 
 ## Introduction
 
-**struixC** is a compiler that translates a subset of the C programming language into **struixLang**, a stack-based programming language. struixC allows developers to write code using familiar C syntax and compiles it into struixLang code, which can then be executed within the struixLang interpreter.
+**struixCC** is a compiler that translates a subset of the C programming language into **struixLang**, a stack-based programming language. struixCC allows developers to write code using familiar C syntax and compiles it into struixLang code, which can then be executed within the struixLang interpreter.
 
-This guide provides an overview of struixC, including supported features, limitations, and helpful tips for programmers. It aims to assist developers in effectively using struixC to write and compile C code for execution in the struixLang environment.
+This guide provides an overview of struixCC, including supported features, limitations, and helpful tips for programmers. It aims to assist developers in effectively using struixCC to write and compile C code for execution in the struixLang environment.
 
 ---
 
@@ -43,13 +43,13 @@ This guide provides an overview of struixC, including supported features, limita
 
 ### Installation
 
-To use struixC, ensure you have the following prerequisites:
+To use struixCC, ensure you have the following prerequisites:
 
-- **Python 3.x**: struixC is implemented in Python and requires Python 3.x.
-- **pycparser**: A C parser in Python used by struixC to parse C code. Install it using:
+- **Python 3.x**: struixCC is implemented in Python and requires Python 3.x.
+- **Requirements**: Install necessary dependencies using `pip`:
 
   ```bash
-  pip install pycparser
+  pip install -r requirements.txt
   ```
 
 - **struixLang Interpreter**: The interpreter for executing compiled struixLang code.
@@ -58,12 +58,12 @@ To use struixC, ensure you have the following prerequisites:
 
 1. **Write Your C Code**: Create a C source file (`example.c`) using the supported features of struixC.
 
-2. **Compile Using struixC**:
+2. **Compile Using struixCC**:
 
-   Run the struixC compiler to translate your C code into struixLang code:
+   Run the struixCC compiler to translate your C code into struixLang code:
 
    ```bash
-   python struixC.py example.c -o example.sx
+   python struixCC.py example.c -o example.sx
    ```
 
    This command generates an output file `example.sx` containing the equivalent struixLang code.
@@ -80,7 +80,7 @@ To use struixC, ensure you have the following prerequisites:
 
 ## Supported Features
 
-struixC supports a subset of the C programming language. Below are the key features and constructs that you can use.
+struixCC supports a subset of the C programming language. Below are the key features and constructs that you can use.
 
 ### Data Types
 
@@ -304,7 +304,7 @@ struixC supports a subset of the C programming language. Below are the key featu
 
 ## Limitations and Differences from Standard C
 
-struixC aims to provide a subset of C features suitable for compilation into struixLang. Below are the limitations and differences compared to standard C on GCC/Linux.
+struixCC aims to provide a subset of C features suitable for compilation into struixLang. Below are the limitations and differences compared to standard C on GCC/Linux.
 
 ### Unsupported Features
 
@@ -350,7 +350,7 @@ struixC aims to provide a subset of C features suitable for compilation into str
 
 ### Optimizing Code
 
-- **Simplify Expressions**: Since struixC translates C expressions into stack operations, simplifying expressions can result in more efficient code.
+- **Simplify Expressions**: Since struixCC compiles C expressions into stack operations, simplifying expressions can result in more efficient code.
 
 - **Avoid Deep Nesting**: Excessive nesting of control structures can make the generated code complex. Keep the code structure as flat as possible.
 
@@ -358,7 +358,7 @@ struixC aims to provide a subset of C features suitable for compilation into str
 
 - **Initialize Arrays**: Always initialize arrays before use to avoid unexpected values.
 
-- **Array Bounds**: struixC does not enforce array bounds checking. Ensure you access valid indices to prevent runtime errors.
+- **Array Bounds**: struixCC does not enforce array bounds checking. Ensure you access valid indices to prevent runtime errors.
 
 ### Control Flow Constructs
 
@@ -445,9 +445,9 @@ int main() {
 
 ## Conclusion
 
-struixC offers a way to write programs using familiar C syntax and compile them into struixLang for execution in a stack-based environment. While it supports many fundamental features of C, there are limitations to consider.
+struixCC offers a way to write programs using familiar C syntax and compile them into struixLang for execution in a stack-based environment. While it supports many fundamental features of C, there are limitations to consider.
 
-When working with struixC:
+When working with struixCC:
 
 - **Understand the Supported Features**: Be aware of what is supported to write compatible code.
 
@@ -455,6 +455,6 @@ When working with struixC:
 
 - **Use struixLang Features**: After compilation, leverage struixLang's capabilities for input/output and other operations.
 
-This guide serves as a starting point for developers looking to use struixC. By keeping the limitations and differences in mind, you can effectively write and compile code for the struixLang interpreter.
+This guide serves as a starting point for developers looking to use struixCC. By keeping the limitations and differences in mind, you can effectively write and compile code for the struixLang interpreter.
 
-Happy coding with struixC!
+Happy coding with struixCC!
