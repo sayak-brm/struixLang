@@ -162,8 +162,6 @@ Input (example.c):
 
 ```c
 // Example: While loop summing numbers
-#include <stdio.h>
-
 int main() {
     // Initialize variables
     int i = 0;        // Loop counter
