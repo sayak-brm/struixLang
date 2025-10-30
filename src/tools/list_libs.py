@@ -1,5 +1,11 @@
 import os
 
+"""
+Lists all .sxlib files in the specified directory and prints their names and contents.
+
+Args:
+    lib_directory (str): The path to the directory containing .sxlib files.
+"""
 def list_libs(lib_directory):
     """
     Lists all .sxlib files in the specified directory and prints their names and contents.
