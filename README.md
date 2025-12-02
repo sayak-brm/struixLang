@@ -138,7 +138,7 @@ python struixCC.py -x example.c
 
 Detailed documentation, including syntax, primitives, and examples, is available [here](https://sayak-brm.github.io/struixLang/docs/).
 
-Documentation for struixCC is available [here](https://sayak-brm.github.io/struixLang/docs/struixCC).
+Documentation for struixCC is available [here](https://sayak-brm.github.io/struixLang/docs/struixCC), and a coding guide is available [here](https://sayak-brm.github.io/struixLang/docs/struixC).
 
 ### Example: struixLang Program
 
